@@ -1,15 +1,36 @@
 
 import React, { useState } from 'react';
-import { DATA_SOURCES } from '../mockData';
 
-const DataSources: React.FC = () => {
-  const [url, setUrl] = useState('');
+interface DataSourcesProps {
+  sheetUrl: string;
+  onConnect: (url: string) => void;
+}
+
+const DataSources: React.FC<DataSourcesProps> = ({ sheetUrl, onConnect }) => {
+  const [url, setUrl] = useState(sheetUrl);
 
   return (
     <div className="p-8 flex flex-col gap-8 animate-in fade-in duration-500 max-w-5xl mx-auto">
       <div className="flex flex-col gap-2">
-        <h3 className="text-[#111418] dark:text-white text-3xl font-black leading-tight tracking-tight">Fontes de Dados</h3>
-        <p className="text-[#617589] text-base">Gerencie suas planilhas do Google Drive para processamento estatístico.</p>
+        <h3 className="text-[#111418] dark:text-white text-3xl font-black leading-tight tracking-tight">Fonte de Dados Única</h3>
+        <p className="text-[#617589] text-base">Conecte sua planilha do Google Drive para processamento automático.</p>
+      </div>
+
+      {/* Connection Guide */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {[
+          { icon: 'share', title: '1. Compartilhar', desc: 'No Google Sheets, vá em Arquivo > Compartilhar > Publicar na web.' },
+          { icon: 'csv', title: '2. Formato CSV', desc: 'Selecione "Valores separados por vírgulas (.csv)" no formato de exportação.' },
+          { icon: 'link', title: '3. Copiar Link', desc: 'Clique em publicar, copie o link gerado e cole abaixo.' }
+        ].map((step, i) => (
+          <div key={i} className="p-4 bg-white dark:bg-slate-900 border border-[#dbe0e6] dark:border-slate-800 rounded-xl">
+            <div className="size-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center mb-3">
+              <span className="material-symbols-outlined text-xl">{step.icon}</span>
+            </div>
+            <p className="font-bold text-sm dark:text-white mb-1">{step.title}</p>
+            <p className="text-xs text-[#617589]">{step.desc}</p>
+          </div>
+        ))}
       </div>
 
       {/* Connect Card */}
@@ -19,106 +40,61 @@ const DataSources: React.FC = () => {
             <span className="material-symbols-outlined text-3xl">add_link</span>
           </div>
           <div>
-            <h4 className="text-lg font-bold text-[#111418] dark:text-white">Conectar nova planilha</h4>
-            <p className="text-sm text-[#617589]">Cole a URL do Google Sheets para importar novos dados de turmas.</p>
+            <h4 className="text-lg font-bold text-[#111418] dark:text-white">Link da Planilha</h4>
+            <p className="text-sm text-[#617589]">Cole a URL pública de exportação CSV.</p>
           </div>
         </div>
-        
+
         <div className="flex flex-col md:flex-row items-end gap-4">
           <div className="flex-1 w-full">
-            <label className="text-[#111418] dark:text-white text-sm font-bold mb-2 block">Link do Google Sheets</label>
             <div className="relative">
               <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#617589] text-xl">link</span>
-              <input 
+              <input
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
-                className="w-full rounded-xl text-[#111418] border border-[#dbe0e6] dark:border-slate-700 dark:bg-slate-800 dark:text-white h-14 pl-12 pr-4 focus:ring-2 focus:ring-primary focus:border-primary placeholder:text-slate-400" 
-                placeholder="https://docs.google.com/spreadsheets/d/..."
+                className="w-full rounded-xl text-[#111418] border border-[#dbe0e6] dark:border-slate-700 dark:bg-slate-800 dark:text-white h-14 pl-12 pr-4 focus:ring-2 focus:ring-primary focus:border-primary placeholder:text-slate-400"
+                placeholder="https://docs.google.com/spreadsheets/d/e/.../pub?output=csv"
               />
             </div>
           </div>
-          <button className="w-full md:w-auto h-14 px-8 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl transition-all shadow-lg shadow-primary/20 active:scale-95 flex items-center justify-center gap-2">
+          <button
+            onClick={() => onConnect(url)}
+            className="w-full md:w-auto h-14 px-8 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl transition-all shadow-lg shadow-primary/20 active:scale-95 flex items-center justify-center gap-2"
+          >
             <span className="material-symbols-outlined">sync</span>
-            <span>Conectar</span>
+            <span>Sincronizar Agora</span>
           </button>
         </div>
-        <div className="mt-4 flex items-center gap-2 text-xs text-[#617589] bg-slate-50 dark:bg-slate-800/40 p-3 rounded-lg">
-          <span className="material-symbols-outlined text-sm text-primary">info</span>
-          <p>A planilha deve ter permissão de leitura para "Qualquer pessoa com o link".</p>
-        </div>
-      </div>
 
-      {/* List */}
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <h4 className="text-lg font-bold dark:text-white flex items-center gap-2">
-            <span className="material-symbols-outlined text-primary filled">cloud_done</span>
-            Fontes Conectadas
-          </h4>
-          <span className="text-xs font-bold text-primary bg-primary/10 px-3 py-1 rounded-full">{DATA_SOURCES.length} Ativas</span>
-        </div>
-
-        <div className="grid grid-cols-1 gap-4">
-          {DATA_SOURCES.map((source) => (
-            <div key={source.id} className={`flex flex-col md:flex-row items-center gap-4 p-5 bg-white dark:bg-slate-900 border rounded-2xl hover:shadow-md transition-all ${
-              source.status === 'error' ? 'border-red-200 bg-red-50/20 dark:border-red-900/30' : 'border-[#dbe0e6] dark:border-slate-800'
-            }`}>
-              <div className={`h-14 w-14 flex items-center justify-center rounded-xl shrink-0 ${
-                source.status === 'synced' ? 'bg-green-50 text-green-600' : 
-                source.status === 'processing' ? 'bg-blue-50 text-primary' : 'bg-red-50 text-red-600'
-              }`}>
-                <span className={`material-symbols-outlined text-3xl ${source.status === 'processing' ? 'animate-spin' : ''}`}>
-                  {source.status === 'synced' ? 'check_circle' : 
-                   source.status === 'processing' ? 'sync' : 'warning'}
-                </span>
-              </div>
-
-              <div className="flex-1 text-center md:text-left truncate">
-                <p className="text-base font-bold dark:text-white truncate">{source.name}</p>
-                <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mt-1 text-xs text-[#617589]">
-                  <span className={`font-bold ${source.status === 'synced' ? 'text-green-600' : source.status === 'processing' ? 'text-primary' : 'text-red-600'}`}>
-                    {source.status === 'synced' ? 'Sincronizado' : source.status === 'processing' ? 'Processando...' : 'Erro'}
-                  </span>
-                  <span>•</span>
-                  <span>{source.lastSync}</span>
-                  {source.rows > 0 && (
-                    <>
-                      <span>•</span>
-                      <span>{source.rows.toLocaleString()} linhas</span>
-                    </>
-                  )}
-                </div>
-                {source.errorMsg && <p className="text-[10px] text-red-500 mt-1 font-bold italic">{source.errorMsg}</p>}
-              </div>
-
-              <div className="flex gap-2">
-                <button className="p-2.5 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-xl transition-all">
-                  <span className="material-symbols-outlined">refresh</span>
-                </button>
-                <button className="p-2.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all">
-                  <span className="material-symbols-outlined">delete</span>
-                </button>
+        {sheetUrl && (
+          <div className="mt-6 p-4 bg-green-50 dark:bg-green-900/10 border border-green-100 dark:border-green-800/20 rounded-xl flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="material-symbols-outlined text-green-600">check_circle</span>
+              <div>
+                <p className="text-green-700 dark:text-green-400 text-sm font-bold">Conectado com sucesso</p>
+                <p className="text-green-600 dark:text-green-500 text-xs truncate max-w-[300px]">{sheetUrl}</p>
               </div>
             </div>
-          ))}
-        </div>
+            <button
+              onClick={() => { setUrl(''); onConnect(''); }}
+              className="text-red-500 text-xs font-bold hover:underline"
+            >
+              Desconectar
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Help Banner */}
-      <div className="bg-gradient-to-br from-primary to-blue-700 p-8 rounded-2xl text-white relative overflow-hidden group">
+      <div className="bg-gradient-to-br from-primary/10 to-blue-700/5 p-8 rounded-2xl border border-primary/20 relative overflow-hidden group">
         <div className="relative z-10 flex flex-col gap-4">
-          <h4 className="text-xl font-bold">Precisa de ajuda com a integração?</h4>
-          <p className="text-white/80 max-w-md text-sm leading-relaxed">
-            Consulte nossos tutoriais sobre como estruturar suas planilhas para garantir a leitura correta dos dados pelo sistema.
+          <h4 className="text-xl font-bold dark:text-white">Estrutura Sugerida para o Google Forms</h4>
+          <p className="text-[#617589] max-w-2xl text-sm leading-relaxed">
+            Para garantir a leitura correta, sugerimos que seu formulário tenha as seguintes perguntas na ordem (ou capture os campos):
+            <br /><br />
+            1. <strong>Timestamp</strong> (Automático) | 2. <strong>Email</strong> | 3. <strong>Nome Completo</strong> | 4. <strong>Turma</strong> | 5+ <strong>Questões</strong>
           </p>
-          <button className="bg-white text-primary w-fit px-6 py-2.5 rounded-xl font-bold text-sm hover:scale-105 transition-all shadow-xl flex items-center gap-2">
-            <span className="material-symbols-outlined text-xl">menu_book</span>
-            Documentação
-          </button>
         </div>
-        <span className="material-symbols-outlined absolute right-[-20px] bottom-[-20px] text-[240px] opacity-10 rotate-12 group-hover:scale-110 transition-transform duration-700">
-          drive_file_move
-        </span>
       </div>
     </div>
   );
