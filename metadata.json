@@ -1,0 +1,8 @@
+{
+  "name": "Math Performance Dashboard",
+  "description": "A comprehensive pedagogical dashboard for mathematics teachers to monitor student progress, sync with Google Drive, and analyze academic performance using Gemini AI.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
