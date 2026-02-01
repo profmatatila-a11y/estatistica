@@ -62,10 +62,11 @@ export const processStats = (data: RawResponse[]) => {
             const got = parseFloat(parts[0]);
             const total = parseFloat(parts[1]);
             if (!isNaN(got) && !isNaN(total) && total > 0) {
-                finalScore = (got / total) * 10; // Normalized to 0-10 scale
+                finalScore = (got / total) * 100; // Normalized to 0-100 scale for % display
             }
         } else {
-            finalScore = parseFloat(resp.scoreString) || 0;
+            const raw = parseFloat(resp.scoreString) || 0;
+            finalScore = raw <= 10 ? raw * 10 : raw; // Assume 0-10 or 0-100
         }
 
         // Class Stats
@@ -97,7 +98,7 @@ export const processStats = (data: RawResponse[]) => {
     const students: Student[] = Object.entries(studentMap).map(([email, data], idx) => {
         const avg = data.scores.reduce((a, b) => a + b, 0) / data.scores.length;
         return {
-            id: email, // Use email as unique ID
+            id: email,
             name: data.name,
             avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.name}`,
             class: data.class,
