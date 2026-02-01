@@ -31,6 +31,18 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, onLogout }) => 
           </div>
         </div>
 
+        {/* External Website Link */}
+        <a
+          href="https://atiladeoliveira.com.br"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-3 px-3 py-3 bg-primary/5 hover:bg-primary/10 text-primary rounded-xl transition-all border border-primary/10 mt-2 mb-4 group"
+        >
+          <span className="material-symbols-outlined text-xl group-hover:rotate-12 transition-transform">language</span>
+          <span className="text-sm font-bold">Meu Web Site</span>
+          <span className="material-symbols-outlined text-xs ml-auto opacity-50">open_in_new</span>
+        </a>
+
         {/* User Card */}
         <div className="flex gap-3 p-2 bg-slate-50 dark:bg-slate-800/50 rounded-xl items-center">
           <img
