@@ -59,6 +59,7 @@ export interface QuestionStat {
   totalAnswers: number;
   distribution: AnswerDistribution[];
   mostCommonAnswer: string;
+  suggestedCorrect?: string;
   isQuiz?: boolean;
 }
 

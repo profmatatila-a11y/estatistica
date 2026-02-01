@@ -171,6 +171,8 @@ export const processStats = (data: RawResponse[], targetActivities: number = 5) 
     });
 
     const questionMap: Record<string, Record<string, Record<string, number>>> = {};
+    const suggestedGabarito: Record<string, Record<string, string>> = {}; // ListName -> QuestionTitle -> Answer
+
     const excludedHeaders = [
         'name', 'class', 'email', 'timestamp', 'scorestring',
         'carimbo', 'data/hora', 'endereço', 'nome completo',
@@ -180,7 +182,7 @@ export const processStats = (data: RawResponse[], targetActivities: number = 5) 
     ].map(h => h.toLowerCase());
 
     data.forEach(resp => {
-        // Detect list name for this entry
+        // Detect list name
         let rowListName = '';
         const possibleListKeys = Object.keys(resp).filter(k =>
             (k.toLowerCase().includes('lista') ||
@@ -192,6 +194,13 @@ export const processStats = (data: RawResponse[], targetActivities: number = 5) 
         if (possibleListKeys.length > 0) rowListName = resp[possibleListKeys[0]];
         if (!rowListName || rowListName.length < 2) rowListName = `Lista ${resp.timestamp.split(' ')[0] || 'Sem Data'}`;
 
+        // Check for perfect score to extract gabarito
+        let isPerfect = false;
+        if (resp.scoreString.includes('/')) {
+            const [got, total] = resp.scoreString.split('/').map(n => parseFloat(n));
+            if (got === total && total > 0) isPerfect = true;
+        }
+
         // Question Analysis logic
         Object.entries(resp).forEach(([key, value]) => {
             const lowerKey = key.toLowerCase();
@@ -202,6 +211,12 @@ export const processStats = (data: RawResponse[], targetActivities: number = 5) 
             if (!questionMap[rowListName][key]) questionMap[rowListName][key] = {};
             if (!questionMap[rowListName][key][value]) questionMap[rowListName][key][value] = 0;
             questionMap[rowListName][key][value] += 1;
+
+            // If this is a perfect score row, store these answers as the suggested gabarito
+            if (isPerfect) {
+                if (!suggestedGabarito[rowListName]) suggestedGabarito[rowListName] = {};
+                suggestedGabarito[rowListName][key] = value;
+            }
         });
     });
 
@@ -221,7 +236,8 @@ export const processStats = (data: RawResponse[], targetActivities: number = 5) 
                 listName,
                 totalAnswers,
                 distribution,
-                mostCommonAnswer: distribution[0]?.answer || ''
+                mostCommonAnswer: distribution[0]?.answer || '',
+                suggestedCorrect: suggestedGabarito[listName]?.[title]
             });
         });
     });

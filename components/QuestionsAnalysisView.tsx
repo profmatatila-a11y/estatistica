@@ -9,39 +9,40 @@ interface QuestionsAnalysisViewProps {
 }
 
 const QuestionsAnalysisView: React.FC<QuestionsAnalysisViewProps> = ({ questionStats }) => {
-    // Unique lists available
     const availableLists = Array.from(new Set(questionStats.map(q => q.listName))).sort();
-
     const [selectedListName, setSelectedListName] = useState<string>(availableLists[0] || '');
 
-    // Filtered questions based on selected list
     const filteredQuestions = questionStats.filter(q => q.listName === selectedListName);
-
     const [selectedQuestion, setSelectedQuestion] = useState<QuestionStat | null>(filteredQuestions[0] || null);
 
-    // Reset selected question when list changes
-    const handleListChange = (listName: string) => {
-        setSelectedListName(listName);
-        const firstInList = questionStats.find(q => q.listName === listName);
+    // Sync selected question when list or stats change
+    React.useEffect(() => {
+        const firstInList = questionStats.find(q => q.listName === selectedListName);
         setSelectedQuestion(firstInList || null);
-    };
+    }, [selectedListName, questionStats]);
 
-    // State to store correct answers (keyed by question title)
+    // State to store correct answers (keyed by "listName|questionTitle")
     const [correctAnswers, setCorrectAnswers] = useState<Record<string, string>>(() => {
         const saved = localStorage.getItem('correctAnswers');
         return saved ? JSON.parse(saved) : {};
     });
 
-    const handleSetCorrect = (questionTitle: string, answer: string) => {
-        const newCorrect = { ...correctAnswers, [questionTitle]: answer };
+    const handleSetCorrect = (listName: string, questionTitle: string, answer: string) => {
+        const key = `${listName}|${questionTitle}`;
+        const newCorrect = { ...correctAnswers, [key]: answer };
         setCorrectAnswers(newCorrect);
         localStorage.setItem('correctAnswers', JSON.stringify(newCorrect));
     };
 
     const COLORS = ['#137fec', '#059669', '#7c3aed', '#db2777', '#ea580c', '#64748b'];
 
+    const getMarkedAnswer = (q: QuestionStat) => {
+        const key = `${q.listName}|${q.title}`;
+        return correctAnswers[key] || q.suggestedCorrect;
+    };
+
     const getAccuracy = (q: QuestionStat) => {
-        const correct = correctAnswers[q.title];
+        const correct = getMarkedAnswer(q);
         if (!correct) return null;
         const dist = q.distribution.find(d => d.answer === correct);
         return dist ? dist.percentage : 0;
@@ -52,10 +53,10 @@ const QuestionsAnalysisView: React.FC<QuestionsAnalysisViewProps> = ({ questionS
             <div className="flex justify-between items-end">
                 <div>
                     <h3 className="text-2xl font-bold text-[#111418] dark:text-white">Análise por Questão</h3>
-                    <p className="text-[#617589] dark:text-slate-400">Selecione a lista e clique na resposta para marcar o <strong>Gabarito</strong>.</p>
+                    <p className="text-[#617589] dark:text-slate-400">Marque o <strong>Gabarito</strong> clicando na resposta correta.</p>
                 </div>
                 {selectedQuestion && getAccuracy(selectedQuestion) !== null && (
-                    <div className="bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800/30 px-6 py-3 rounded-xl flex flex-col items-center">
+                    <div className="bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800/30 px-6 py-3 rounded-xl flex flex-col items-center animate-in zoom-in duration-300">
                         <span className="text-[10px] font-bold text-green-600 uppercase tracking-widest">Taxa de Acerto</span>
                         <span className="text-2xl font-bold text-green-700 dark:text-green-400">{getAccuracy(selectedQuestion)}%</span>
                     </div>
@@ -70,8 +71,8 @@ const QuestionsAnalysisView: React.FC<QuestionsAnalysisViewProps> = ({ questionS
                         <label className="text-[10px] font-bold text-[#617589] uppercase tracking-widest mb-2 block">Filtrar por Lista</label>
                         <select
                             value={selectedListName}
-                            onChange={(e) => handleListChange(e.target.value)}
-                            className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-lg text-sm font-bold text-[#111418] dark:text-white focus:ring-2 ring-primary/20 p-2"
+                            onChange={(e) => setSelectedListName(e.target.value)}
+                            className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-lg text-sm font-bold text-[#111418] dark:text-white focus:ring-2 ring-primary/20 p-2 cursor-pointer"
                         >
                             {availableLists.map(list => (
                                 <option key={list} value={list}>{list}</option>
@@ -81,11 +82,11 @@ const QuestionsAnalysisView: React.FC<QuestionsAnalysisViewProps> = ({ questionS
 
                     <div className="bg-white dark:bg-slate-900 rounded-2xl border border-[#dbe0e6] dark:border-slate-800 shadow-sm overflow-hidden h-[500px] flex flex-col">
                         <div className="p-4 border-b border-slate-50 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50">
-                            <h4 className="font-bold text-sm text-[#111418] dark:text-white uppercase tracking-wider">Questões do Grupo</h4>
+                            <h4 className="font-bold text-sm text-[#111418] dark:text-white uppercase tracking-wider">Questões</h4>
                         </div>
                         <div className="flex-1 overflow-y-auto custom-scrollbar">
                             {filteredQuestions.map((q) => {
-                                const isAnswered = !!correctAnswers[q.title];
+                                const isAnswered = !!getMarkedAnswer(q);
                                 return (
                                     <button
                                         key={q.id}
@@ -104,6 +105,9 @@ const QuestionsAnalysisView: React.FC<QuestionsAnalysisViewProps> = ({ questionS
                                             <span className="text-[10px] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-[#617589]">
                                                 {q.totalAnswers} respostas
                                             </span>
+                                            {q.suggestedCorrect && !correctAnswers[`${q.listName}|${q.title}`] && (
+                                                <span className="text-[9px] text-green-600 font-bold uppercase tracking-tighter bg-green-50 px-1 rounded">Auto</span>
+                                            )}
                                         </div>
                                     </button>
                                 );
@@ -136,7 +140,8 @@ const QuestionsAnalysisView: React.FC<QuestionsAnalysisViewProps> = ({ questionS
                                                     dataKey="count"
                                                 >
                                                     {selectedQuestion.distribution.map((entry, index) => {
-                                                        const isCorrect = correctAnswers[selectedQuestion.title] === entry.answer;
+                                                        const marked = getMarkedAnswer(selectedQuestion);
+                                                        const isCorrect = marked === entry.answer;
                                                         return (
                                                             <Cell
                                                                 key={`cell-${index}`}
@@ -156,27 +161,35 @@ const QuestionsAnalysisView: React.FC<QuestionsAnalysisViewProps> = ({ questionS
                                     </div>
 
                                     <div className="flex flex-col gap-3">
-                                        <h5 className="text-sm font-bold text-[#617589] uppercase tracking-wider mb-2">Marcar o Gabarito:</h5>
+                                        <h5 className="text-sm font-bold text-[#617589] uppercase tracking-wider mb-2">Clique para definir o Gabarito:</h5>
                                         {selectedQuestion.distribution.map((item, idx) => {
-                                            const isCorrect = correctAnswers[selectedQuestion.title] === item.answer;
+                                            const marked = getMarkedAnswer(selectedQuestion);
+                                            const isCorrect = marked === item.answer;
+                                            const isAuto = selectedQuestion.suggestedCorrect === item.answer && !correctAnswers[`${selectedQuestion.listName}|${selectedQuestion.title}`];
+
                                             return (
                                                 <button
                                                     key={idx}
-                                                    onClick={() => handleSetCorrect(selectedQuestion.title, item.answer)}
-                                                    className={`flex flex-col gap-1 text-left p-2 rounded-xl border transition-all ${isCorrect ? 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800' : 'border-transparent hover:bg-slate-50 dark:hover:bg-slate-800'}`}
+                                                    onClick={() => handleSetCorrect(selectedQuestion.listName, selectedQuestion.title, item.answer)}
+                                                    className={`group flex flex-col gap-1 text-left p-2.5 rounded-xl border transition-all ${isCorrect ? 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800' : 'border-transparent hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:border-slate-200'}`}
                                                 >
                                                     <div className="flex justify-between text-sm items-center">
                                                         <div className="flex items-center gap-2 truncate">
-                                                            {isCorrect && <span className="material-symbols-outlined text-green-600 text-lg">check_circle</span>}
+                                                            {isCorrect ? (
+                                                                <span className="material-symbols-outlined text-green-600 text-lg">check_circle</span>
+                                                            ) : (
+                                                                <span className="material-symbols-outlined text-slate-300 text-lg group-hover:text-primary transition-colors">radio_button_unchecked</span>
+                                                            )}
                                                             <span className={`font-medium truncate max-w-[180px] ${isCorrect ? 'text-green-700 dark:text-green-300' : 'text-[#111418] dark:text-white'}`}>
                                                                 {item.answer}
+                                                                {isAuto && <span className="ml-2 text-[10px] text-green-600/60">(Auto)</span>}
                                                             </span>
                                                         </div>
                                                         <span className={`font-bold ${isCorrect ? 'text-green-600' : 'text-primary'}`}>{item.percentage}%</span>
                                                     </div>
-                                                    <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                                    <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden mt-1">
                                                         <div
-                                                            className="h-full rounded-full transition-all duration-500"
+                                                            className="h-full rounded-full transition-all duration-700 ease-out"
                                                             style={{
                                                                 width: `${item.percentage}%`,
                                                                 backgroundColor: isCorrect ? '#059669' : COLORS[idx % COLORS.length]
@@ -198,8 +211,8 @@ const QuestionsAnalysisView: React.FC<QuestionsAnalysisViewProps> = ({ questionS
                                     <div>
                                         <h5 className="font-bold text-primary mb-1">Análise de Desempenho</h5>
                                         <p className="text-sm text-primary/80 leading-relaxed">
-                                            {correctAnswers[selectedQuestion.title]
-                                                ? `Com a resposta "${correctAnswers[selectedQuestion.title]}" definida como correta, o índice de aproveitamento é de ${getAccuracy(selectedQuestion)}%.`
+                                            {getMarkedAnswer(selectedQuestion)
+                                                ? `Com a resposta "${getMarkedAnswer(selectedQuestion)}" definida como correta, o índice de aproveitamento é de ${getAccuracy(selectedQuestion)}%.`
                                                 : `Selecione a resposta correta acima para calcular o índice de acerto desta questão.`
                                             }
                                         </p>
