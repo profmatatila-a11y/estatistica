@@ -91,12 +91,15 @@ export const processStats = (data: RawResponse[], targetActivities: number = 5) 
         const rawEmail = (resp.email || '').toLowerCase().trim();
         const rawName = (resp.name || '').toLowerCase().trim();
 
-        // Robust Teacher Detection (Handle accents and common variations)
+        // Robust Teacher Detection (Handle multiple emails and name variations)
         const normalize = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
         const normName = normalize(rawName);
-        const isTeacher = rawEmail === 'profmatatila@gmail.com' ||
-            normName === 'atila de oliveira' ||
-            normName === 'atila oliveira';
+
+        const teacherEmails = ['profmatatila@gmail.com', 'oliveiraatila@yahoo.com', 'atiladeoliveira@pensi.co'];
+        const isTeacher = teacherEmails.includes(rawEmail) ||
+            normName.includes('atila oliveira') ||
+            normName === 'atila' ||
+            normName === 'atila de oliveira';
 
         // Extract date from timestamp (format: "DD/MM/YYYY HH:mm:ss")
         const dateStr = resp.timestamp.split(' ')[0] || 'Sem Data';
@@ -227,9 +230,12 @@ export const processStats = (data: RawResponse[], targetActivities: number = 5) 
         // Robust Teacher Detection
         const normalize = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
         const normName = normalize(rawName);
-        const isTeacher = rawEmail === 'profmatatila@gmail.com' ||
-            normName === 'atila de oliveira' ||
-            normName === 'atila oliveira';
+
+        const teacherEmails = ['profmatatila@gmail.com', 'oliveiraatila@yahoo.com', 'atiladeoliveira@pensi.co'];
+        const isTeacher = teacherEmails.includes(rawEmail) ||
+            normName.includes('atila oliveira') ||
+            normName === 'atila' ||
+            normName === 'atila de oliveira';
 
         // Detect list name
         let rowListName = '';
