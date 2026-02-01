@@ -18,42 +18,56 @@ export const fetchSheetData = async (sheetUrl: string): Promise<RawResponse[]> =
         const lines = csvData.split('\n').filter(line => line.trim() !== '');
         if (lines.length < 2) return [];
 
-        // Detect delimiter ( Brazilian sheets often use ; )
+        // Robust CSV Splitter (handles quotes and regional delimiters)
         const delimiter = lines[0].includes(';') ? ';' : ',';
-
-        // Better CSV splitting to handle quoted values with commas
-        const splitCSV = (text: string) => {
-            const regex = new RegExp(`${delimiter}(?=(?:(?:[^"]*"){2})*[^"]*$)`);
-            return text.split(regex).map(v => v.trim().replace(/^"|"$/g, ''));
+        const parseCSVLine = (text: string) => {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i];
+                if (char === '"') {
+                    inQuotes = !inQuotes;
+                } else if (char === delimiter && !inQuotes) {
+                    result.push(current.trim().replace(/^"|"$/g, ''));
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            result.push(current.trim().replace(/^"|"$/g, ''));
+            return result;
         };
 
-        const headers = splitCSV(lines[0]);
+        const headers = parseCSVLine(lines[0]);
         const headerLower = headers.map(h => h.toLowerCase());
+        console.log('Detected Headers:', headers);
 
         // Dynamic Column Finder
         const findCol = (keywords: string[]) => {
             return headerLower.findIndex(h => keywords.some(k => h.includes(k)));
         };
 
-        const idxEmail = findCol(['email', 'endereço']);
-        const idxName = findCol(['nome', 'aluno', 'identificação', 'digite o seu']);
+        const idxEmail = findCol(['email', 'endereço', 'endereço de']);
+        const idxName = findCol(['nome', 'aluno', 'identificação', 'digite o seu', 'seu nome']);
         const idxScore = findCol(['pontuação', 'score', 'nota', 'ponto']);
         const idxClass = findCol(['turma', 'série', 'ano', 'classe']);
         const idxTime = findCol(['carimbo', 'data', 'timestamp', 'horário']);
 
         return lines.slice(1).map(line => {
-            const values = splitCSV(line);
+            const values = parseCSVLine(line);
             const obj: any = {};
             headers.forEach((header, index) => {
                 obj[header] = values[index];
             });
 
+            // Map with fallbacks to standard Google Forms indices
             return {
                 timestamp: (idxTime !== -1 ? values[idxTime] : values[0]) || '',
                 email: (idxEmail !== -1 ? values[idxEmail] : values[1]) || '',
                 scoreString: (idxScore !== -1 ? values[idxScore] : values[2]) || '0',
                 name: (idxName !== -1 ? values[idxName] : values[3]) || '',
-                class: (idxClass !== -1 ? values[idxClass] : values[4]) || 'Sem Turma',
+                class: (idxClass !== -1 ? values[idxClass] : (values[4] || 'Sem Turma')),
                 ...obj
             } as RawResponse;
         });
