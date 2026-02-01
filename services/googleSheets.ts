@@ -170,7 +170,7 @@ export const processStats = (data: RawResponse[], targetActivities: number = 5) 
         };
     });
 
-    const questionMap: Record<string, Record<string, number>> = {};
+    const questionMap: Record<string, Record<string, Record<string, number>>> = {};
     const excludedHeaders = [
         'name', 'class', 'email', 'timestamp', 'scorestring',
         'carimbo', 'data/hora', 'endereço', 'nome completo',
@@ -180,33 +180,50 @@ export const processStats = (data: RawResponse[], targetActivities: number = 5) 
     ].map(h => h.toLowerCase());
 
     data.forEach(resp => {
+        // Detect list name for this entry
+        let rowListName = '';
+        const possibleListKeys = Object.keys(resp).filter(k =>
+            (k.toLowerCase().includes('lista') ||
+                k.toLowerCase().includes('atividade') ||
+                k.toLowerCase().includes('quais') ||
+                k.toLowerCase().includes('título')) &&
+            !['name', 'class', 'email', 'timestamp', 'scoreString'].includes(k)
+        );
+        if (possibleListKeys.length > 0) rowListName = resp[possibleListKeys[0]];
+        if (!rowListName || rowListName.length < 2) rowListName = `Lista ${resp.timestamp.split(' ')[0] || 'Sem Data'}`;
+
         // Question Analysis logic
         Object.entries(resp).forEach(([key, value]) => {
             const lowerKey = key.toLowerCase();
             if (excludedHeaders.some(h => lowerKey.includes(h))) return;
             if (!value || value.length === 0) return;
 
-            if (!questionMap[key]) questionMap[key] = {};
-            if (!questionMap[key][value]) questionMap[key][value] = 0;
-            questionMap[key][value] += 1;
+            if (!questionMap[rowListName]) questionMap[rowListName] = {};
+            if (!questionMap[rowListName][key]) questionMap[rowListName][key] = {};
+            if (!questionMap[rowListName][key][value]) questionMap[rowListName][key][value] = 0;
+            questionMap[rowListName][key][value] += 1;
         });
     });
 
-    const questionStats: QuestionStat[] = Object.entries(questionMap).map(([title, answers], idx) => {
-        const totalAnswers = Object.values(answers).reduce((a, b) => a + b, 0);
-        const distribution = Object.entries(answers).map(([answer, count]) => ({
-            answer,
-            count,
-            percentage: Number(((count / totalAnswers) * 100).toFixed(1))
-        })).sort((a, b) => b.count - a.count);
+    const questionStats: QuestionStat[] = [];
+    Object.entries(questionMap).forEach(([listName, listQuestions]) => {
+        Object.entries(listQuestions).forEach(([title, answers], qIdx) => {
+            const totalAnswers = Object.values(answers).reduce((a, b) => a + b, 0);
+            const distribution = Object.entries(answers).map(([answer, count]) => ({
+                answer,
+                count,
+                percentage: Number(((count / totalAnswers) * 100).toFixed(1))
+            })).sort((a, b) => b.count - a.count);
 
-        return {
-            id: String(idx + 1),
-            title,
-            totalAnswers,
-            distribution,
-            mostCommonAnswer: distribution[0]?.answer || ''
-        };
+            questionStats.push({
+                id: `${listName}-${qIdx}`,
+                title,
+                listName,
+                totalAnswers,
+                distribution,
+                mostCommonAnswer: distribution[0]?.answer || ''
+            });
+        });
     });
 
     return { classStats, students, evolutionData, listStats, questionStats };

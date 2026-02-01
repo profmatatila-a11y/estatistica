@@ -9,7 +9,22 @@ interface QuestionsAnalysisViewProps {
 }
 
 const QuestionsAnalysisView: React.FC<QuestionsAnalysisViewProps> = ({ questionStats }) => {
-    const [selectedQuestion, setSelectedQuestion] = useState<QuestionStat | null>(questionStats[0] || null);
+    // Unique lists available
+    const availableLists = Array.from(new Set(questionStats.map(q => q.listName))).sort();
+
+    const [selectedListName, setSelectedListName] = useState<string>(availableLists[0] || '');
+
+    // Filtered questions based on selected list
+    const filteredQuestions = questionStats.filter(q => q.listName === selectedListName);
+
+    const [selectedQuestion, setSelectedQuestion] = useState<QuestionStat | null>(filteredQuestions[0] || null);
+
+    // Reset selected question when list changes
+    const handleListChange = (listName: string) => {
+        setSelectedListName(listName);
+        const firstInList = questionStats.find(q => q.listName === listName);
+        setSelectedQuestion(firstInList || null);
+    };
 
     // State to store correct answers (keyed by question title)
     const [correctAnswers, setCorrectAnswers] = useState<Record<string, string>>(() => {
@@ -37,7 +52,7 @@ const QuestionsAnalysisView: React.FC<QuestionsAnalysisViewProps> = ({ questionS
             <div className="flex justify-between items-end">
                 <div>
                     <h3 className="text-2xl font-bold text-[#111418] dark:text-white">Análise por Questão</h3>
-                    <p className="text-[#617589] dark:text-slate-400">Clique em uma resposta para marcá-la como <strong>Correta (Gabarito)</strong>.</p>
+                    <p className="text-[#617589] dark:text-slate-400">Selecione a lista e clique na resposta para marcar o <strong>Gabarito</strong>.</p>
                 </div>
                 {selectedQuestion && getAccuracy(selectedQuestion) !== null && (
                     <div className="bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800/30 px-6 py-3 rounded-xl flex flex-col items-center">
@@ -48,36 +63,52 @@ const QuestionsAnalysisView: React.FC<QuestionsAnalysisViewProps> = ({ questionS
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                {/* Questions List */}
-                <div className="lg:col-span-4 bg-white dark:bg-slate-900 rounded-2xl border border-[#dbe0e6] dark:border-slate-800 shadow-sm overflow-hidden h-[600px] flex flex-col">
-                    <div className="p-4 border-b border-slate-50 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50">
-                        <h4 className="font-bold text-sm text-[#111418] dark:text-white uppercase tracking-wider">Selecione uma Questão</h4>
+                {/* Questions List and List Selector */}
+                <div className="lg:col-span-4 flex flex-col gap-4">
+                    {/* List Selector Dropdown */}
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-[#dbe0e6] dark:border-slate-800 p-4 shadow-sm">
+                        <label className="text-[10px] font-bold text-[#617589] uppercase tracking-widest mb-2 block">Filtrar por Lista</label>
+                        <select
+                            value={selectedListName}
+                            onChange={(e) => handleListChange(e.target.value)}
+                            className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-lg text-sm font-bold text-[#111418] dark:text-white focus:ring-2 ring-primary/20 p-2"
+                        >
+                            {availableLists.map(list => (
+                                <option key={list} value={list}>{list}</option>
+                            ))}
+                        </select>
                     </div>
-                    <div className="flex-1 overflow-y-auto custom-scrollbar">
-                        {questionStats.map((q) => {
-                            const isAnswered = !!correctAnswers[q.title];
-                            return (
-                                <button
-                                    key={q.id}
-                                    onClick={() => setSelectedQuestion(q)}
-                                    className={`w-full text-left p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors border-b border-slate-50 dark:border-slate-800 last:border-0 ${selectedQuestion?.id === q.id ? 'bg-primary/5 border-r-4 border-r-primary' : ''}`}
-                                >
-                                    <div className="flex justify-between items-start gap-2">
-                                        <p className={`text-sm font-medium line-clamp-2 ${selectedQuestion?.id === q.id ? 'text-primary' : 'text-[#111418] dark:text-white'}`}>
-                                            {q.title}
-                                        </p>
-                                        {isAnswered && (
-                                            <span className="material-symbols-outlined text-green-500 text-sm">check_circle</span>
-                                        )}
-                                    </div>
-                                    <div className="flex items-center gap-2 mt-2">
-                                        <span className="text-[10px] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-[#617589]">
-                                            {q.totalAnswers} respostas
-                                        </span>
-                                    </div>
-                                </button>
-                            );
-                        })}
+
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-[#dbe0e6] dark:border-slate-800 shadow-sm overflow-hidden h-[500px] flex flex-col">
+                        <div className="p-4 border-b border-slate-50 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50">
+                            <h4 className="font-bold text-sm text-[#111418] dark:text-white uppercase tracking-wider">Questões do Grupo</h4>
+                        </div>
+                        <div className="flex-1 overflow-y-auto custom-scrollbar">
+                            {filteredQuestions.map((q) => {
+                                const isAnswered = !!correctAnswers[q.title];
+                                return (
+                                    <button
+                                        key={q.id}
+                                        onClick={() => setSelectedQuestion(q)}
+                                        className={`w-full text-left p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors border-b border-slate-50 dark:border-slate-800 last:border-0 ${selectedQuestion?.id === q.id ? 'bg-primary/5 border-r-4 border-r-primary' : ''}`}
+                                    >
+                                        <div className="flex justify-between items-start gap-2">
+                                            <p className={`text-sm font-medium line-clamp-2 ${selectedQuestion?.id === q.id ? 'text-primary' : 'text-[#111418] dark:text-white'}`}>
+                                                {q.title}
+                                            </p>
+                                            {isAnswered && (
+                                                <span className="material-symbols-outlined text-green-500 text-sm">check_circle</span>
+                                            )}
+                                        </div>
+                                        <div className="flex items-center gap-2 mt-2">
+                                            <span className="text-[10px] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-[#617589]">
+                                                {q.totalAnswers} respostas
+                                            </span>
+                                        </div>
+                                    </button>
+                                );
+                            })}
+                        </div>
                     </div>
                 </div>
 
@@ -86,7 +117,7 @@ const QuestionsAnalysisView: React.FC<QuestionsAnalysisViewProps> = ({ questionS
                     {selectedQuestion ? (
                         <>
                             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-[#dbe0e6] dark:border-slate-800 p-8 shadow-sm">
-                                <span className="text-xs font-bold text-primary uppercase tracking-widest mb-2 block">Questão Selecionada</span>
+                                <span className="text-xs font-bold text-primary uppercase tracking-widest mb-2 block">{selectedQuestion.listName}</span>
                                 <h4 className="text-xl font-bold text-[#111418] dark:text-white mb-6 leading-relaxed">
                                     {selectedQuestion.title}
                                 </h4>
@@ -125,7 +156,7 @@ const QuestionsAnalysisView: React.FC<QuestionsAnalysisViewProps> = ({ questionS
                                     </div>
 
                                     <div className="flex flex-col gap-3">
-                                        <h5 className="text-sm font-bold text-[#617589] uppercase tracking-wider mb-2">Clique na Resposta Correta:</h5>
+                                        <h5 className="text-sm font-bold text-[#617589] uppercase tracking-wider mb-2">Marcar o Gabarito:</h5>
                                         {selectedQuestion.distribution.map((item, idx) => {
                                             const isCorrect = correctAnswers[selectedQuestion.title] === item.answer;
                                             return (

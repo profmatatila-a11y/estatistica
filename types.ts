@@ -55,6 +55,7 @@ export interface AnswerDistribution {
 export interface QuestionStat {
   id: string;
   title: string;
+  listName: string;
   totalAnswers: number;
   distribution: AnswerDistribution[];
   mostCommonAnswer: string;
