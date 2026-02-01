@@ -171,14 +171,19 @@ export const processStats = (data: RawResponse[], targetActivities: number = 5) 
     });
 
     const questionMap: Record<string, Record<string, number>> = {};
-    const excludedHeaders = ['name', 'class', 'email', 'timestamp', 'scoreString', 'carimbo de data/hora', 'endereço de e-mail', 'nome completo', 'turma', 'pontuação', 'carimbo'];
+    const excludedHeaders = [
+        'name', 'class', 'email', 'timestamp', 'scorestring',
+        'carimbo', 'data/hora', 'endereço', 'nome completo',
+        'turma', 'pontuação', 'score', 'nota',
+        'digite o seu nome', 'seu nome', 'qual o seu nome', 'identificação',
+        'digite o seu'
+    ].map(h => h.toLowerCase());
 
     data.forEach(resp => {
-        // ... (existing logic for names, emails, lists remains same)
-
         // Question Analysis logic
         Object.entries(resp).forEach(([key, value]) => {
-            if (excludedHeaders.some(h => key.toLowerCase().includes(h))) return;
+            const lowerKey = key.toLowerCase();
+            if (excludedHeaders.some(h => lowerKey.includes(h))) return;
             if (!value || value.length === 0) return;
 
             if (!questionMap[key]) questionMap[key] = {};
