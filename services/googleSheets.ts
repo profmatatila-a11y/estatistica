@@ -48,7 +48,7 @@ export const fetchSheetData = async (sheetUrl: string): Promise<RawResponse[]> =
 
 export const processStats = (data: RawResponse[]) => {
     const classMap: Record<string, { totalScore: number; count: number; studentEmails: Set<string>; exercises: number }> = {};
-    const studentMap: Record<string, { name: string; class: string; scores: number[]; email: string }> = {};
+    const studentMap: Record<string, { name: string; class: string; history: { month: string; score: number }[]; email: string }> = {};
 
     // Timeline Data for Evolution Chart
     const timelineMap: Record<string, { total: number; count: number }> = {};
@@ -68,7 +68,7 @@ export const processStats = (data: RawResponse[]) => {
             const got = parseFloat(parts[0]);
             const total = parseFloat(parts[1]);
             if (!isNaN(got) && !isNaN(total) && total > 0) {
-                finalScore = (got / total) * 10; // Normalized to 0-10 for chart
+                finalScore = (got / total) * 10; // Normalized to 0-10 for chart internals
             }
         } else {
             const raw = parseFloat(resp.scoreString) || 0;
@@ -91,13 +91,13 @@ export const processStats = (data: RawResponse[]) => {
 
         // Student Stats
         if (!studentMap[email]) {
-            studentMap[email] = { name, class: className, scores: [], email };
+            studentMap[email] = { name, class: className, history: [], email };
         }
-        studentMap[email].scores.push(finalScore);
+        studentMap[email].history.push({ month: dateStr, score: Number((finalScore * 10).toFixed(1)) });
     });
 
     const evolutionData = Object.entries(timelineMap).map(([date, data]) => ({
-        month: date, // Using date instead of month label
+        month: date,
         score: Number(((data.total / data.count) * 10).toFixed(1)),
         avg: Number(((data.total / data.count) * 10).toFixed(1))
     })).sort((a, b) => {
@@ -117,17 +117,22 @@ export const processStats = (data: RawResponse[]) => {
     }));
 
     const students: Student[] = Object.entries(studentMap).map(([email, data], idx) => {
-        const avg = data.scores.reduce((a, b) => a + b, 0) / data.scores.length;
+        const avg = data.history.reduce((a, b) => a + b.score, 0) / data.history.length;
         return {
             id: email,
             name: data.name,
-            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name)}&background=f1f5f9&color=64748b&bold=true`, // Neutral UI avatar with initials
+            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name)}&background=f1f5f9&color=64748b&bold=true`,
             class: data.class,
-            average: Number((avg * 10).toFixed(1)), // Scale to 0-100
+            average: Number(avg.toFixed(1)),
             trend: 0,
-            exercisesDone: data.scores.length,
+            exercisesDone: data.history.length,
             completionRate: 100,
-            recentDrop: 0
+            recentDrop: 0,
+            history: data.history.sort((a, b) => {
+                const [d1, m1, y1] = a.month.split('/').map(Number);
+                const [d2, m2, y2] = b.month.split('/').map(Number);
+                return new Date(y1, m1 - 1, d1).getTime() - new Date(y2, m2 - 1, d2).getTime();
+            })
         };
     });
 

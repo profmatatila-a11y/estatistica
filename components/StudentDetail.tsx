@@ -4,7 +4,7 @@ import {
   Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer,
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend
 } from 'recharts';
-import { COMPETENCY_DATA, EVOLUTION_DATA } from '../mockData';
+import { COMPETENCY_DATA } from '../mockData';
 import { Student } from '../types';
 
 interface StudentDetailProps {
@@ -107,10 +107,10 @@ const StudentDetail: React.FC<StudentDetailProps> = ({ student, onBack }) => {
           <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-8">Desempenho no Período</h3>
           <div className="w-full h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={EVOLUTION_DATA}>
+              <LineChart data={student.history}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                 <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#64748b' }} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b' }} domain={[0, 10]} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b' }} domain={[0, 100]} />
                 <Tooltip />
                 <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px' }} />
                 <Line type="monotone" dataKey="score" name={student.name} stroke="#137fec" strokeWidth={3} dot={{ fill: '#137fec', r: 4 }} />

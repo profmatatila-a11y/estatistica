@@ -9,6 +9,7 @@ export interface Student {
   exercisesDone: number;
   completionRate: number;
   recentDrop?: number;
+  history: { month: string; score: number }[];
 }
 
 export interface Activity {
