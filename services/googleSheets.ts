@@ -57,25 +57,29 @@ export const processStats = (data: RawResponse[], targetActivities: number = 5) 
 
     data.forEach(resp => {
         const className = resp.class || 'Sem Turma';
-        const email = resp.email?.toLowerCase().trim();
-        const name = resp.name?.toLowerCase().trim();
+        const rawEmail = (resp.email || '').toLowerCase().trim();
+        const rawName = (resp.name || '').toLowerCase().trim();
 
-        // Detect Teacher (Atila)
-        const isTeacher = email === 'profmatatila@gmail.com' || name === 'atila de oliveira';
+        // Robust Teacher Detection (Handle accents and common variations)
+        const normalize = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        const normName = normalize(rawName);
+        const isTeacher = rawEmail === 'profmatatila@gmail.com' ||
+            normName === 'atila de oliveira' ||
+            normName === 'atila oliveira';
 
         // Extract date from timestamp (format: "DD/MM/YYYY HH:mm:ss")
         const dateStr = resp.timestamp.split(' ')[0] || 'Sem Data';
 
         // Parse score
         let finalScore = 0;
-        if (resp.scoreString.includes('/')) {
+        if (resp.scoreString && resp.scoreString.includes('/')) {
             const parts = resp.scoreString.split('/');
             const got = parseFloat(parts[0]);
             const total = parseFloat(parts[1]);
             if (!isNaN(got) && !isNaN(total) && total > 0) {
                 finalScore = (got / total) * 10;
             }
-        } else {
+        } else if (resp.scoreString) {
             const raw = parseFloat(resp.scoreString) || 0;
             finalScore = raw > 10 ? raw / 10 : raw;
         }
@@ -94,8 +98,10 @@ export const processStats = (data: RawResponse[], targetActivities: number = 5) 
         if (!listName || listName.length < 2) listName = `Lista ${dateStr}`;
 
         // If this is the teacher, we skip the general student/class stats
-        // but the record will still be used in the question analysis loop below
         if (isTeacher) return;
+
+        // Ensure we have at least an email or name to track the student
+        const studentKey = rawEmail || rawName || `student-${Math.random()}`;
 
         if (!listMap[listName]) {
             listMap[listName] = { totalScore: 0, count: 0 };
@@ -112,13 +118,13 @@ export const processStats = (data: RawResponse[], targetActivities: number = 5) 
         }
         classMap[className].totalScore += finalScore;
         classMap[className].count += 1;
-        classMap[className].studentEmails.add(email);
+        classMap[className].studentEmails.add(studentKey);
         classMap[className].exercises += 1;
 
-        if (!studentMap[email]) {
-            studentMap[email] = { name: resp.name, class: className, history: [], email };
+        if (!studentMap[studentKey]) {
+            studentMap[studentKey] = { name: resp.name || 'Sem Nome', class: className, history: [], email: rawEmail };
         }
-        studentMap[email].history.push({
+        studentMap[studentKey].history.push({
             month: dateStr,
             score: Number((finalScore * 10).toFixed(1)),
             listName: listName
@@ -184,10 +190,15 @@ export const processStats = (data: RawResponse[], targetActivities: number = 5) 
     ].map(h => h.toLowerCase());
 
     data.forEach(resp => {
-        // Detect Teacher (Atila)
-        const email = resp.email?.toLowerCase().trim();
-        const name = resp.name?.toLowerCase().trim();
-        const isTeacher = email === 'profmatatila@gmail.com' || name === 'atila de oliveira';
+        const rawEmail = (resp.email || '').toLowerCase().trim();
+        const rawName = (resp.name || '').toLowerCase().trim();
+
+        // Robust Teacher Detection
+        const normalize = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        const normName = normalize(rawName);
+        const isTeacher = rawEmail === 'profmatatila@gmail.com' ||
+            normName === 'atila de oliveira' ||
+            normName === 'atila oliveira';
 
         // Detect list name
         let rowListName = '';
@@ -201,9 +212,9 @@ export const processStats = (data: RawResponse[], targetActivities: number = 5) 
         if (possibleListKeys.length > 0) rowListName = resp[possibleListKeys[0]];
         if (!rowListName || rowListName.length < 2) rowListName = `Lista ${resp.timestamp.split(' ')[0] || 'Sem Data'}`;
 
-        // Check for perfect score to extract gabarito (fallback if teacher didn't submit)
+        // Check for perfect score (fallback)
         let isPerfect = false;
-        if (resp.scoreString.includes('/')) {
+        if (resp.scoreString && resp.scoreString.includes('/')) {
             const [got, total] = resp.scoreString.split('/').map(n => parseFloat(n));
             if (got === total && total > 0) isPerfect = true;
         }
