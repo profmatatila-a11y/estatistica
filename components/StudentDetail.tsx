@@ -80,32 +80,11 @@ const StudentDetail: React.FC<StudentDetailProps> = ({ student, onBack }) => {
       </div>
 
       {/* Analysis Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Radar Chart */}
-        <div className="bg-white dark:bg-slate-900 rounded-xl p-8 border border-[#dbe0e6] dark:border-slate-800 shadow-sm flex flex-col items-center">
-          <h3 className="text-lg font-bold text-gray-800 dark:text-white self-start mb-8">Radar de Competências</h3>
-          <div className="w-full h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <RadarChart cx="50%" cy="50%" outerRadius="80%" data={COMPETENCY_DATA}>
-                <PolarGrid stroke="#e2e8f0" />
-                <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748b', fontSize: 12 }} />
-                <Radar
-                  name={student.name}
-                  dataKey="value"
-                  stroke="#137fec"
-                  strokeWidth={2}
-                  fill="#137fec"
-                  fillOpacity={0.2}
-                />
-              </RadarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
+      <div className="flex flex-col gap-6">
         {/* Comparison Line Chart */}
         <div className="bg-white dark:bg-slate-900 rounded-xl p-8 border border-[#dbe0e6] dark:border-slate-800 shadow-sm flex flex-col">
           <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-8">Desempenho no Período</h3>
-          <div className="w-full h-[300px]">
+          <div className="w-full h-[350px]">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={student.history}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
