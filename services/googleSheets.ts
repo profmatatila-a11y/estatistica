@@ -57,8 +57,11 @@ export const processStats = (data: RawResponse[], targetActivities: number = 5) 
 
     data.forEach(resp => {
         const className = resp.class || 'Sem Turma';
-        const email = resp.email;
-        const name = resp.name;
+        const email = resp.email?.toLowerCase().trim();
+        const name = resp.name?.toLowerCase().trim();
+
+        // Detect Teacher (Atila)
+        const isTeacher = email === 'profmatatila@gmail.com' || name === 'atila de oliveira';
 
         // Extract date from timestamp (format: "DD/MM/YYYY HH:mm:ss")
         const dateStr = resp.timestamp.split(' ')[0] || 'Sem Data';
@@ -70,7 +73,7 @@ export const processStats = (data: RawResponse[], targetActivities: number = 5) 
             const got = parseFloat(parts[0]);
             const total = parseFloat(parts[1]);
             if (!isNaN(got) && !isNaN(total) && total > 0) {
-                finalScore = (got / total) * 10; // Normalized to 0-10 for chart internals
+                finalScore = (got / total) * 10;
             }
         } else {
             const raw = parseFloat(resp.scoreString) || 0;
@@ -79,7 +82,6 @@ export const processStats = (data: RawResponse[], targetActivities: number = 5) 
 
         // List Stats Logic
         let listName = '';
-        // Look for a column that might contain the list name
         const possibleListKeys = Object.keys(resp).filter(k =>
             (k.toLowerCase().includes('lista') ||
                 k.toLowerCase().includes('atividade') ||
@@ -88,13 +90,12 @@ export const processStats = (data: RawResponse[], targetActivities: number = 5) 
             !['name', 'class', 'email', 'timestamp', 'scoreString'].includes(k)
         );
 
-        if (possibleListKeys.length > 0) {
-            listName = resp[possibleListKeys[0]];
-        }
+        if (possibleListKeys.length > 0) listName = resp[possibleListKeys[0]];
+        if (!listName || listName.length < 2) listName = `Lista ${dateStr}`;
 
-        if (!listName || listName.length < 2) {
-            listName = `Lista ${dateStr}`;
-        }
+        // If this is the teacher, we skip the general student/class stats
+        // but the record will still be used in the question analysis loop below
+        if (isTeacher) return;
 
         if (!listMap[listName]) {
             listMap[listName] = { totalScore: 0, count: 0 };
@@ -102,12 +103,10 @@ export const processStats = (data: RawResponse[], targetActivities: number = 5) 
         listMap[listName].totalScore += finalScore;
         listMap[listName].count += 1;
 
-        // Evolution/Timeline Map
         if (!timelineMap[dateStr]) timelineMap[dateStr] = { total: 0, count: 0 };
         timelineMap[dateStr].total += finalScore;
         timelineMap[dateStr].count += 1;
 
-        // Class Stats
         if (!classMap[className]) {
             classMap[className] = { totalScore: 0, count: 0, studentEmails: new Set(), exercises: 0 };
         }
@@ -116,9 +115,8 @@ export const processStats = (data: RawResponse[], targetActivities: number = 5) 
         classMap[className].studentEmails.add(email);
         classMap[className].exercises += 1;
 
-        // Student Stats
         if (!studentMap[email]) {
-            studentMap[email] = { name, class: className, history: [], email };
+            studentMap[email] = { name: resp.name, class: className, history: [], email };
         }
         studentMap[email].history.push({
             month: dateStr,
@@ -186,6 +184,11 @@ export const processStats = (data: RawResponse[], targetActivities: number = 5) 
     ].map(h => h.toLowerCase());
 
     data.forEach(resp => {
+        // Detect Teacher (Atila)
+        const email = resp.email?.toLowerCase().trim();
+        const name = resp.name?.toLowerCase().trim();
+        const isTeacher = email === 'profmatatila@gmail.com' || name === 'atila de oliveira';
+
         // Detect list name
         let rowListName = '';
         const possibleListKeys = Object.keys(resp).filter(k =>
@@ -198,7 +201,7 @@ export const processStats = (data: RawResponse[], targetActivities: number = 5) 
         if (possibleListKeys.length > 0) rowListName = resp[possibleListKeys[0]];
         if (!rowListName || rowListName.length < 2) rowListName = `Lista ${resp.timestamp.split(' ')[0] || 'Sem Data'}`;
 
-        // Check for perfect score to extract gabarito
+        // Check for perfect score to extract gabarito (fallback if teacher didn't submit)
         let isPerfect = false;
         if (resp.scoreString.includes('/')) {
             const [got, total] = resp.scoreString.split('/').map(n => parseFloat(n));
@@ -211,13 +214,21 @@ export const processStats = (data: RawResponse[], targetActivities: number = 5) 
             if (excludedHeaders.some(h => lowerKey.includes(h))) return;
             if (!value || value.length === 0) return;
 
+            // If this is the teacher, store these answers as THE definitive suggested gabarito
+            if (isTeacher) {
+                if (!suggestedGabarito[rowListName]) suggestedGabarito[rowListName] = {};
+                suggestedGabarito[rowListName][key] = value;
+                return; // Don't add teacher answers to student distribution counts
+            }
+
+            // Normal student response tracking
             if (!questionMap[rowListName]) questionMap[rowListName] = {};
             if (!questionMap[rowListName][key]) questionMap[rowListName][key] = {};
             if (!questionMap[rowListName][key][value]) questionMap[rowListName][key][value] = 0;
             questionMap[rowListName][key][value] += 1;
 
-            // If this is a perfect score row, store these answers as the suggested gabarito
-            if (isPerfect) {
+            // Fallback: If this is a student's perfect score row, store as suggested if no teacher key yet
+            if (isPerfect && (!suggestedGabarito[rowListName] || !suggestedGabarito[rowListName][key])) {
                 if (!suggestedGabarito[rowListName]) suggestedGabarito[rowListName] = {};
                 suggestedGabarito[rowListName][key] = value;
             }
