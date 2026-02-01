@@ -24,24 +24,10 @@ const QuestionsAnalysisView: React.FC<QuestionsAnalysisViewProps> = ({
         setSelectedQuestion(questionStats[0] || null);
     }, [questionStats]);
 
-    // State to store correct answers (keyed by "listName|questionTitle")
-    const [correctAnswers, setCorrectAnswers] = useState<Record<string, string>>(() => {
-        const saved = localStorage.getItem('correctAnswers');
-        return saved ? JSON.parse(saved) : {};
-    });
-
-    const handleSetCorrect = (listName: string, questionTitle: string, answer: string) => {
-        const key = `${listName}|${questionTitle}`;
-        const newCorrect = { ...correctAnswers, [key]: answer };
-        setCorrectAnswers(newCorrect);
-        localStorage.setItem('correctAnswers', JSON.stringify(newCorrect));
-    };
-
     const COLORS = ['#137fec', '#059669', '#7c3aed', '#db2777', '#ea580c', '#64748b'];
 
     const getMarkedAnswer = (q: QuestionStat) => {
-        const key = `${q.listName}|${q.title}`;
-        return correctAnswers[key] || q.suggestedCorrect;
+        return q.suggestedCorrect;
     };
 
     const getAccuracy = (q: QuestionStat) => {
@@ -56,7 +42,7 @@ const QuestionsAnalysisView: React.FC<QuestionsAnalysisViewProps> = ({
             <div className="flex justify-between items-end">
                 <div>
                     <h3 className="text-2xl font-bold text-[#111418] dark:text-white">Análise por Questão</h3>
-                    <p className="text-[#617589] dark:text-slate-400">Marque o <strong>Gabarito</strong> clicando na resposta correta.</p>
+                    <p className="text-[#617589] dark:text-slate-400">Visualize o desempenho detalhado de cada item da lista.</p>
                 </div>
                 {selectedQuestion && getAccuracy(selectedQuestion) !== null && (
                     <div className="bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800/30 px-6 py-3 rounded-xl flex flex-col items-center animate-in zoom-in duration-300">
@@ -110,8 +96,8 @@ const QuestionsAnalysisView: React.FC<QuestionsAnalysisViewProps> = ({
                                             <span className="text-[10px] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-[#617589]">
                                                 {q.totalAnswers} respostas
                                             </span>
-                                            {q.suggestedCorrect && !correctAnswers[`${q.listName}|${q.title}`] && (
-                                                <span className="text-[9px] text-green-600 font-bold uppercase tracking-tighter bg-green-50 px-1 rounded">Auto</span>
+                                            {q.suggestedCorrect && (
+                                                <span className="text-[9px] text-green-600 font-bold uppercase tracking-tighter bg-green-50 px-1 rounded">Smart Key</span>
                                             )}
                                         </div>
                                     </button>
@@ -166,28 +152,26 @@ const QuestionsAnalysisView: React.FC<QuestionsAnalysisViewProps> = ({
                                     </div>
 
                                     <div className="flex flex-col gap-3">
-                                        <h5 className="text-sm font-bold text-[#617589] uppercase tracking-wider mb-2">Clique para definir o Gabarito:</h5>
+                                        <h5 className="text-sm font-bold text-[#617589] uppercase tracking-wider mb-2">Distribuição de Respostas:</h5>
                                         {selectedQuestion.distribution.map((item, idx) => {
                                             const marked = getMarkedAnswer(selectedQuestion);
                                             const isCorrect = marked === item.answer;
-                                            const isAuto = selectedQuestion.suggestedCorrect === item.answer && !correctAnswers[`${selectedQuestion.listName}|${selectedQuestion.title}`];
 
                                             return (
-                                                <button
+                                                <div
                                                     key={idx}
-                                                    onClick={() => handleSetCorrect(selectedQuestion.listName, selectedQuestion.title, item.answer)}
-                                                    className={`group flex flex-col gap-1 text-left p-2.5 rounded-xl border transition-all ${isCorrect ? 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800' : 'border-transparent hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:border-slate-200'}`}
+                                                    className={`group flex flex-col gap-1 text-left p-2.5 rounded-xl border transition-all ${isCorrect ? 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800' : 'border-transparent bg-slate-50/50 dark:bg-slate-800/30'}`}
                                                 >
                                                     <div className="flex justify-between text-sm items-center">
                                                         <div className="flex items-center gap-2 truncate">
                                                             {isCorrect ? (
-                                                                <span className="material-symbols-outlined text-green-600 text-lg">check_circle</span>
+                                                                <span className="material-symbols-outlined text-green-600 text-lg">verified</span>
                                                             ) : (
-                                                                <span className="material-symbols-outlined text-slate-300 text-lg group-hover:text-primary transition-colors">radio_button_unchecked</span>
+                                                                <span className="material-symbols-outlined text-slate-300 text-lg">circle</span>
                                                             )}
                                                             <span className={`font-medium truncate max-w-[180px] ${isCorrect ? 'text-green-700 dark:text-green-300' : 'text-[#111418] dark:text-white'}`}>
                                                                 {item.answer}
-                                                                {isAuto && <span className="ml-2 text-[10px] text-green-600/60">(Auto)</span>}
+                                                                {isCorrect && <span className="ml-2 text-[10px] text-green-600/60 font-bold">(Gabarito)</span>}
                                                             </span>
                                                         </div>
                                                         <span className={`font-bold ${isCorrect ? 'text-green-600' : 'text-primary'}`}>{item.percentage}%</span>
@@ -201,7 +185,7 @@ const QuestionsAnalysisView: React.FC<QuestionsAnalysisViewProps> = ({
                                                             }}
                                                         />
                                                     </div>
-                                                </button>
+                                                </div>
                                             );
                                         })}
                                     </div>
@@ -214,11 +198,11 @@ const QuestionsAnalysisView: React.FC<QuestionsAnalysisViewProps> = ({
                                         <span className="material-symbols-outlined">analytics</span>
                                     </div>
                                     <div>
-                                        <h5 className="font-bold text-primary mb-1">Análise de Desempenho</h5>
+                                        <h5 className="font-bold text-primary mb-1">Feedback de Desempenho</h5>
                                         <p className="text-sm text-primary/80 leading-relaxed">
                                             {getMarkedAnswer(selectedQuestion)
-                                                ? `Com a resposta "${getMarkedAnswer(selectedQuestion)}" definida como correta, o índice de aproveitamento é de ${getAccuracy(selectedQuestion)}%.`
-                                                : `Selecione a resposta correta acima para calcular o índice de acerto desta questão.`
+                                                ? `Com base no Gabarito Inteligente, ${getAccuracy(selectedQuestion)}% dos alunos acertaram esta questão. O gráfico acima mostra a distribuição detalhada dos erros e acertos.`
+                                                : `Aguardando a definição do gabarito (via resposta do professor ou alunos com nota máxima) para esta lista.`
                                             }
                                         </p>
                                     </div>
