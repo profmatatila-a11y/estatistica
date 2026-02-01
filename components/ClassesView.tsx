@@ -5,9 +5,10 @@ interface ClassesViewProps {
     classStats: ClassStats[];
     students: Student[];
     onStudentClick: (id: string) => void;
+    targetActivities: number;
 }
 
-const ClassesView: React.FC<ClassesViewProps> = ({ classStats, students, onStudentClick }) => {
+const ClassesView: React.FC<ClassesViewProps> = ({ classStats, students, onStudentClick, targetActivities }) => {
     return (
         <div className="p-8 flex flex-col gap-8 animate-in fade-in duration-500">
             <div>
@@ -45,6 +46,9 @@ const ClassesView: React.FC<ClassesViewProps> = ({ classStats, students, onStude
                                         style={{ width: `${c.progress}%` }}
                                     />
                                 </div>
+                                <p className="text-[10px] text-slate-400 mt-1.5 font-medium italic">
+                                    Meta: {targetActivities} {targetActivities === 1 ? 'atividade' : 'atividades'}
+                                </p>
                             </div>
 
                             <div className="pt-4 border-t border-slate-50 dark:border-slate-800">

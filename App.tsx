@@ -139,9 +139,11 @@ const App: React.FC = () => {
       case 'data-sources':
         return <DataSources
           sheetUrl={sheetUrl}
-          onConnect={loadData}
+          onConnect={handleConnect}
           activityName={activityName}
           onNameChange={handleNameChange}
+          targetActivities={targetActivities}
+          onTargetChange={handleTargetChange}
         />;
       default:
         return (
