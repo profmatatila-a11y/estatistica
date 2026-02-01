@@ -4,9 +4,11 @@ import React, { useState } from 'react';
 interface DataSourcesProps {
   sheetUrl: string;
   onConnect: (url: string) => void;
+  activityName: string;
+  onNameChange: (name: string) => void;
 }
 
-const DataSources: React.FC<DataSourcesProps> = ({ sheetUrl, onConnect }) => {
+const DataSources: React.FC<DataSourcesProps> = ({ sheetUrl, onConnect, activityName, onNameChange }) => {
   const [url, setUrl] = useState(sheetUrl);
 
   return (
@@ -40,30 +42,46 @@ const DataSources: React.FC<DataSourcesProps> = ({ sheetUrl, onConnect }) => {
             <span className="material-symbols-outlined text-3xl">add_link</span>
           </div>
           <div>
-            <h4 className="text-lg font-bold text-[#111418] dark:text-white">Link da Planilha</h4>
-            <p className="text-sm text-[#617589]">Cole a URL pública de exportação CSV.</p>
+            <h4 className="text-lg font-bold text-[#111418] dark:text-white">Conectar Planilha</h4>
+            <p className="text-sm text-[#617589]">Insira o nome da atividade e o link público da planilha CSV.</p>
           </div>
         </div>
 
-        <div className="flex flex-col md:flex-row items-end gap-4">
+        <div className="flex flex-col gap-6">
           <div className="flex-1 w-full">
+            <h4 className="text-sm font-bold text-[#111418] dark:text-white mb-2">Título da Atividade</h4>
             <div className="relative">
-              <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#617589] text-xl">link</span>
+              <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#617589] text-xl">label</span>
               <input
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
+                value={activityName}
+                onChange={(e) => onNameChange(e.target.value)}
                 className="w-full rounded-xl text-[#111418] border border-[#dbe0e6] dark:border-slate-700 dark:bg-slate-800 dark:text-white h-14 pl-12 pr-4 focus:ring-2 focus:ring-primary focus:border-primary placeholder:text-slate-400"
-                placeholder="https://docs.google.com/spreadsheets/d/e/.../pub?output=csv"
+                placeholder="Ex: Simulado de Geometria, Lista 02..."
               />
             </div>
           </div>
-          <button
-            onClick={() => onConnect(url)}
-            className="w-full md:w-auto h-14 px-8 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl transition-all shadow-lg shadow-primary/20 active:scale-95 flex items-center justify-center gap-2"
-          >
-            <span className="material-symbols-outlined">sync</span>
-            <span>Sincronizar Agora</span>
-          </button>
+
+          <div className="flex flex-col md:flex-row items-end gap-4">
+            <div className="flex-1 w-full">
+              <h4 className="text-sm font-bold text-[#111418] dark:text-white mb-2">Link da Planilha (CSV)</h4>
+              <div className="relative">
+                <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#617589] text-xl">link</span>
+                <input
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                  className="w-full rounded-xl text-[#111418] border border-[#dbe0e6] dark:border-slate-700 dark:bg-slate-800 dark:text-white h-14 pl-12 pr-4 focus:ring-2 focus:ring-primary focus:border-primary placeholder:text-slate-400"
+                  placeholder="https://docs.google.com/spreadsheets/d/e/.../pub?output=csv"
+                />
+              </div>
+            </div>
+            <button
+              onClick={() => onConnect(url)}
+              className="w-full md:w-auto h-14 px-8 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl transition-all shadow-lg shadow-primary/20 active:scale-95 flex items-center justify-center gap-2"
+            >
+              <span className="material-symbols-outlined">sync</span>
+              <span>Sincronizar Agora</span>
+            </button>
+          </div>
         </div>
 
         {sheetUrl && (

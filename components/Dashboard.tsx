@@ -10,14 +10,24 @@ interface DashboardProps {
   onStudentClick: (id: string) => void;
   students: Student[];
   classStats: ClassStats[];
+  activityName: string;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ onStudentClick, students, classStats }) => {
+const Dashboard: React.FC<DashboardProps> = ({ onStudentClick, students, classStats, activityName }) => {
   const overallAvg = students.length > 0
     ? (students.reduce((acc, s) => acc + s.average, 0) / students.length).toFixed(1)
     : '0.0';
 
   const totalExercises = classStats.reduce((acc, c) => acc + c.exercisesCount, 0);
+
+  // Get recent 4 students as "Recent Activities"
+  const recentStudents = [...students].slice(0, 4);
+  const activities = recentStudents.map(s => ({
+    icon: 'assignment_turned_in',
+    title: activityName,
+    subtitle: `${s.name} • Nota: ${s.average.toFixed(1)}`,
+    color: 'bg-blue-50 text-blue-600'
+  }));
 
   return (
     <div className="p-8 flex flex-col gap-8 animate-in fade-in duration-500">
@@ -96,20 +106,22 @@ const Dashboard: React.FC<DashboardProps> = ({ onStudentClick, students, classSt
         </div>
 
         {/* Recent Activities */}
-        <div className="lg:col-span-4 bg-white dark:bg-slate-900 rounded-xl border border-[#dbe0e6] dark:border-slate-800 p-6 shadow-sm flex flex-col">
-          <h4 className="text-[#111418] dark:text-white text-lg font-bold mb-4">Últimos Lançamentos</h4>
-          <div className="flex flex-col gap-4">
-            {ACTIVITIES.slice(0, 5).map((activity) => (
-              <div key={activity.id} className="flex gap-4 items-start p-2 hover:bg-background-light dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer group">
-                <div className={`size-10 rounded-full flex items-center justify-center shrink-0 bg-blue-100 dark:bg-blue-900/40 text-primary`}>
-                  <span className="material-symbols-outlined text-xl">description</span>
+        <div className="lg:col-span-4 bg-white dark:bg-slate-900 rounded-xl p-6 border border-[#dbe0e6] dark:border-slate-800 shadow-sm">
+          <h3 className="text-lg font-bold text-[#111418] dark:text-white mb-6">Últimos Lançamentos</h3>
+          <div className="flex flex-col gap-6">
+            {activities.length > 0 ? activities.map((activity, i) => (
+              <div key={i} className="flex gap-4 items-start">
+                <div className={`p-2.5 rounded-lg ${activity.color}`}>
+                  <span className="material-symbols-outlined text-xl">{activity.icon}</span>
                 </div>
-                <div className="flex flex-col truncate">
-                  <p className="text-sm font-bold text-[#111418] dark:text-white group-hover:text-primary transition-colors">{activity.title}</p>
-                  <p className="text-xs text-[#617589] dark:text-slate-400">{activity.class} • {activity.timestamp}</p>
+                <div>
+                  <p className="text-sm font-bold text-[#111418] dark:text-white leading-tight">{activity.title}</p>
+                  <p className="text-xs text-[#617589] mt-1">{activity.subtitle}</p>
                 </div>
               </div>
-            ))}
+            )) : (
+              <p className="text-sm text-slate-400 italic">Nenhum envio recente.</p>
+            )}
           </div>
         </div>
       </div>

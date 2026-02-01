@@ -16,6 +16,7 @@ const App: React.FC = () => {
 
   // You can replace this with your actual Google Sheets Published CSV URL
   const [sheetUrl, setSheetUrl] = useState(localStorage.getItem('sheetUrl') || '');
+  const [activityName, setActivityName] = useState(localStorage.getItem('activityName') || 'Atividade de Matemática');
 
   useEffect(() => {
     if (isDarkMode) {
@@ -43,6 +44,11 @@ const App: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleNameChange = (name: string) => {
+    setActivityName(name);
+    localStorage.setItem('activityName', name);
   };
 
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
@@ -82,6 +88,7 @@ const App: React.FC = () => {
           onStudentClick={handleStudentClick}
           students={data?.students || []}
           classStats={data?.classStats || []}
+          activityName={activityName}
         />;
       case 'student-detail':
         const student = data?.students.find(s => s.id === selectedStudentId);
@@ -93,6 +100,8 @@ const App: React.FC = () => {
         return <DataSources
           sheetUrl={sheetUrl}
           onConnect={loadData}
+          activityName={activityName}
+          onNameChange={handleNameChange}
         />;
       default:
         return (
