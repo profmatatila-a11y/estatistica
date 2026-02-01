@@ -6,9 +6,19 @@ interface HeaderProps {
   currentView: ViewState;
   isDarkMode: boolean;
   toggleDarkMode: () => void;
+  selectedList: string;
+  onListChange: (list: string) => void;
+  availableLists: string[];
 }
 
-const Header: React.FC<HeaderProps> = ({ currentView, isDarkMode, toggleDarkMode }) => {
+const Header: React.FC<HeaderProps> = ({
+  currentView,
+  isDarkMode,
+  toggleDarkMode,
+  selectedList,
+  onListChange,
+  availableLists
+}) => {
   const getTitle = () => {
     switch (currentView) {
       case 'dashboard': return 'Dashboard de Desempenho';
@@ -26,10 +36,31 @@ const Header: React.FC<HeaderProps> = ({ currentView, isDarkMode, toggleDarkMode
         <div className="p-2 bg-primary/5 rounded-lg">
           <span className="material-symbols-outlined text-primary filled">analytics</span>
         </div>
-        <h2 className="text-lg font-bold leading-tight tracking-tight">{getTitle()}</h2>
+        <div>
+          <h2 className="text-lg font-bold leading-tight tracking-tight">{getTitle()}</h2>
+          {selectedList !== 'Todas as Listas' && (
+            <p className="text-[10px] text-primary font-bold uppercase tracking-widest animate-in slide-in-from-top-1">
+              Filtrado: {selectedList}
+            </p>
+          )}
+        </div>
       </div>
 
-      <div className="flex flex-1 justify-end gap-6 items-center">
+      <div className="flex flex-1 justify-end gap-4 items-center">
+        {/* Global List Filter */}
+        <div className="hidden md:flex items-center gap-2 bg-[#f0f2f4] dark:bg-slate-800 rounded-lg px-3 h-10 border border-transparent focus-within:border-primary/30 transition-all">
+          <span className="material-symbols-outlined text-[#617589] text-xl">filter_list</span>
+          <select
+            value={selectedList}
+            onChange={(e) => onListChange(e.target.value)}
+            className="bg-transparent border-none focus:ring-0 text-sm font-bold text-[#111418] dark:text-white cursor-pointer min-w-[120px] max-w-[200px]"
+          >
+            {availableLists.map(list => (
+              <option key={list} value={list} className="dark:bg-slate-900">{list}</option>
+            ))}
+          </select>
+        </div>
+
         <label className="flex flex-col w-full max-w-xs group">
           <div className="flex w-full items-stretch rounded-lg h-10 bg-[#f0f2f4] dark:bg-slate-800 group-focus-within:ring-2 ring-primary/20 transition-all">
             <div className="text-[#617589] flex items-center justify-center pl-4">
@@ -51,15 +82,14 @@ const Header: React.FC<HeaderProps> = ({ currentView, isDarkMode, toggleDarkMode
               {isDarkMode ? 'light_mode' : 'dark_mode'}
             </span>
           </button>
-          <button className="relative flex items-center justify-center rounded-lg h-10 w-10 bg-[#f0f2f4] dark:bg-slate-800 text-[#111418] dark:text-white hover:bg-primary/10 transition-colors">
-            <span className="material-symbols-outlined">notifications</span>
-            <span className="absolute top-2 right-2 size-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-800"></span>
-          </button>
         </div>
 
-        <button className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all shadow-md active:scale-95">
+        <button
+          onClick={() => window.location.reload()}
+          className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all shadow-md active:scale-95 shrink-0"
+        >
           <span className="material-symbols-outlined text-sm">sync</span>
-          <span className="hidden sm:inline">Sincronizar Google Drive</span>
+          <span className="hidden sm:inline">Sincronizar</span>
         </button>
       </div>
     </header>

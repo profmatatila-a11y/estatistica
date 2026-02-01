@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import Dashboard from './components/Dashboard';
@@ -84,6 +84,14 @@ const App: React.FC = () => {
     setCurrentView('student-detail');
   };
 
+  const [selectedList, setSelectedList] = useState<string>('Todas as Listas');
+
+  const availableLists = useMemo(() => {
+    if (!data) return ['Todas as Listas'];
+    const lists = Array.from(new Set(data.questionStats.map(q => q.listName))).sort();
+    return ['Todas as Listas', ...lists];
+  }, [data]);
+
   const renderContent = () => {
     if (loading) return (
       <div className="flex flex-col items-center justify-center h-full gap-4">
@@ -117,6 +125,7 @@ const App: React.FC = () => {
           activityName={activityName}
           evolutionData={data?.evolutionData || []}
           listStats={data?.listStats || []}
+          selectedList={selectedList}
         />;
       case 'classes':
         return <ClassesView
@@ -133,7 +142,10 @@ const App: React.FC = () => {
       case 'list-stats':
         return <ListStatsView listStats={data?.listStats || []} />;
       case 'questions':
-        return <QuestionsAnalysisView questionStats={data?.questionStats || []} />;
+        const questionsToShow = selectedList === 'Todas as Listas'
+          ? data?.questionStats || []
+          : data?.questionStats.filter(q => q.listName === selectedList) || [];
+        return <QuestionsAnalysisView questionStats={questionsToShow} />;
       case 'students':
         return <StudentsView
           students={data?.students || []}
@@ -188,6 +200,9 @@ const App: React.FC = () => {
           currentView={currentView}
           isDarkMode={isDarkMode}
           toggleDarkMode={() => setIsDarkMode(!isDarkMode)}
+          selectedList={selectedList}
+          onListChange={setSelectedList}
+          availableLists={availableLists}
         />
 
         <main className="flex-1 overflow-y-auto custom-scrollbar">

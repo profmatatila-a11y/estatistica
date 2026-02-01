@@ -13,20 +13,35 @@ interface DashboardProps {
   activityName: string;
   evolutionData: any[];
   listStats: any[];
+  selectedList: string;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ onStudentClick, students, classStats, activityName, evolutionData, listStats }) => {
-  const overallAvg = students.length > 0
-    ? (students.reduce((acc, s) => acc + s.average, 0) / students.length).toFixed(1)
+const Dashboard: React.FC<DashboardProps> = ({ onStudentClick, students, classStats, activityName, evolutionData, listStats, selectedList }) => {
+  const isFiltered = selectedList !== 'Todas as Listas';
+
+  const filteredStudentsData = React.useMemo(() => {
+    if (!isFiltered) return students;
+    return students.map(s => {
+      const entry = s.history.find(h => h.listName === selectedList);
+      return entry ? { ...s, average: entry.score } : null;
+    }).filter((s): s is Student => s !== null);
+  }, [students, selectedList, isFiltered]);
+
+  const overallAvg = filteredStudentsData.length > 0
+    ? (filteredStudentsData.reduce((acc, s) => acc + s.average, 0) / filteredStudentsData.length).toFixed(1)
     : '0.0';
 
-  const totalExercises = classStats.reduce((acc, c) => acc + c.exercisesCount, 0);
+  const totalExercises = isFiltered
+    ? filteredStudentsData.length
+    : classStats.reduce((acc, c) => acc + c.exercisesCount, 0);
+
+  const activeActivityName = isFiltered ? selectedList : activityName;
 
   // Get recent 4 students as "Recent Activities"
-  const recentStudents = [...students].slice(0, 4);
+  const recentStudents = [...filteredStudentsData].slice(0, 4);
   const activities = recentStudents.map(s => ({
     icon: 'assignment_turned_in',
-    title: activityName,
+    title: activeActivityName,
     subtitle: `${s.name} • Nota: ${s.average.toFixed(1)}`,
     color: 'bg-blue-50 text-blue-600'
   }));

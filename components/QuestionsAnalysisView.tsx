@@ -6,20 +6,23 @@ import {
 
 interface QuestionsAnalysisViewProps {
     questionStats: QuestionStat[];
+    selectedList?: string;
+    availableLists?: string[];
+    onListChange?: (list: string) => void;
 }
 
-const QuestionsAnalysisView: React.FC<QuestionsAnalysisViewProps> = ({ questionStats }) => {
-    const availableLists = Array.from(new Set(questionStats.map(q => q.listName))).sort();
-    const [selectedListName, setSelectedListName] = useState<string>(availableLists[0] || '');
+const QuestionsAnalysisView: React.FC<QuestionsAnalysisViewProps> = ({
+    questionStats,
+    selectedList,
+    availableLists,
+    onListChange
+}) => {
+    const [selectedQuestion, setSelectedQuestion] = useState<QuestionStat | null>(questionStats[0] || null);
 
-    const filteredQuestions = questionStats.filter(q => q.listName === selectedListName);
-    const [selectedQuestion, setSelectedQuestion] = useState<QuestionStat | null>(filteredQuestions[0] || null);
-
-    // Sync selected question when list or stats change
+    // Sync selected question when stats change
     React.useEffect(() => {
-        const firstInList = questionStats.find(q => q.listName === selectedListName);
-        setSelectedQuestion(firstInList || null);
-    }, [selectedListName, questionStats]);
+        setSelectedQuestion(questionStats[0] || null);
+    }, [questionStats]);
 
     // State to store correct answers (keyed by "listName|questionTitle")
     const [correctAnswers, setCorrectAnswers] = useState<Record<string, string>>(() => {
@@ -66,26 +69,28 @@ const QuestionsAnalysisView: React.FC<QuestionsAnalysisViewProps> = ({ questionS
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 {/* Questions List and List Selector */}
                 <div className="lg:col-span-4 flex flex-col gap-4">
-                    {/* List Selector Dropdown */}
-                    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-[#dbe0e6] dark:border-slate-800 p-4 shadow-sm">
-                        <label className="text-[10px] font-bold text-[#617589] uppercase tracking-widest mb-2 block">Filtrar por Lista</label>
-                        <select
-                            value={selectedListName}
-                            onChange={(e) => setSelectedListName(e.target.value)}
-                            className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-lg text-sm font-bold text-[#111418] dark:text-white focus:ring-2 ring-primary/20 p-2 cursor-pointer"
-                        >
-                            {availableLists.map(list => (
-                                <option key={list} value={list}>{list}</option>
-                            ))}
-                        </select>
-                    </div>
+                    {/* Only show list selector if explicitly passed (optional extra control) */}
+                    {onListChange && availableLists && (
+                        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-[#dbe0e6] dark:border-slate-800 p-4 shadow-sm">
+                            <label className="text-[10px] font-bold text-[#617589] uppercase tracking-widest mb-2 block">Lista Atual</label>
+                            <select
+                                value={selectedList}
+                                onChange={(e) => onListChange(e.target.value)}
+                                className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-lg text-sm font-bold text-[#111418] dark:text-white focus:ring-2 ring-primary/20 p-2 cursor-pointer"
+                            >
+                                {availableLists.map(list => (
+                                    <option key={list} value={list}>{list}</option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
 
                     <div className="bg-white dark:bg-slate-900 rounded-2xl border border-[#dbe0e6] dark:border-slate-800 shadow-sm overflow-hidden h-[500px] flex flex-col">
                         <div className="p-4 border-b border-slate-50 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50">
                             <h4 className="font-bold text-sm text-[#111418] dark:text-white uppercase tracking-wider">Questões</h4>
                         </div>
                         <div className="flex-1 overflow-y-auto custom-scrollbar">
-                            {filteredQuestions.map((q) => {
+                            {questionStats.map((q) => {
                                 const isAnswered = !!getMarkedAnswer(q);
                                 return (
                                     <button

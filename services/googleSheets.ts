@@ -48,7 +48,7 @@ export const fetchSheetData = async (sheetUrl: string): Promise<RawResponse[]> =
 
 export const processStats = (data: RawResponse[], targetActivities: number = 5) => {
     const classMap: Record<string, { totalScore: number; count: number; studentEmails: Set<string>; exercises: number }> = {};
-    const studentMap: Record<string, { name: string; class: string; history: { month: string; score: number }[]; email: string }> = {};
+    const studentMap: Record<string, { name: string; class: string; history: { month: string; score: number; listName?: string }[]; email: string }> = {};
 
     // Timeline Data for Evolution Chart
     const timelineMap: Record<string, { total: number; count: number }> = {};
@@ -120,7 +120,11 @@ export const processStats = (data: RawResponse[], targetActivities: number = 5) 
         if (!studentMap[email]) {
             studentMap[email] = { name, class: className, history: [], email };
         }
-        studentMap[email].history.push({ month: dateStr, score: Number((finalScore * 10).toFixed(1)) });
+        studentMap[email].history.push({
+            month: dateStr,
+            score: Number((finalScore * 10).toFixed(1)),
+            listName: listName
+        });
     });
 
     const evolutionData = Object.entries(timelineMap).map(([date, data]) => ({
