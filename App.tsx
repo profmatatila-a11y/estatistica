@@ -7,6 +7,7 @@ import StudentDetail from './components/StudentDetail';
 import DataSources from './components/DataSources';
 import ClassesView from './components/ClassesView';
 import ReportsView from './components/ReportsView';
+import StudentsView from './components/StudentsView';
 import { ViewState, Student, ClassStats } from './types';
 import { fetchSheetData, processStats } from './services/googleSheets';
 
@@ -107,6 +108,11 @@ const App: React.FC = () => {
         return <ReportsView
           classStats={data?.classStats || []}
           students={data?.students || []}
+        />;
+      case 'students':
+        return <StudentsView
+          students={data?.students || []}
+          onStudentClick={handleStudentClick}
         />;
       case 'student-detail':
         const student = data?.students.find(s => s.id === selectedStudentId);
