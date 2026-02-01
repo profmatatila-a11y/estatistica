@@ -121,7 +121,7 @@ export const processStats = (data: RawResponse[]) => {
         return {
             id: email,
             name: data.name,
-            avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.name}`,
+            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name)}&background=f1f5f9&color=64748b&bold=true`, // Neutral UI avatar with initials
             class: data.class,
             average: Number((avg * 10).toFixed(1)), // Scale to 0-100
             trend: 0,

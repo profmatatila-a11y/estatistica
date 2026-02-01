@@ -33,7 +33,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView }) => {
         {/* User Card */}
         <div className="flex gap-3 p-2 bg-slate-50 dark:bg-slate-800/50 rounded-xl items-center">
           <img
-            src="https://picsum.photos/seed/prof/100/100"
+            src="https://ui-avatars.com/api/?name=Prof+Atila&background=137fec&color=fff&bold=true"
             className="size-10 rounded-full border border-primary/20"
             alt="Prof"
           />
