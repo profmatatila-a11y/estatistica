@@ -8,10 +8,12 @@ import DataSources from './components/DataSources';
 import ClassesView from './components/ClassesView';
 import ReportsView from './components/ReportsView';
 import StudentsView from './components/StudentsView';
+import Login from './components/Login';
 import { ViewState, Student, ClassStats } from './types';
 import { fetchSheetData, processStats } from './services/googleSheets';
 
 const App: React.FC = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(localStorage.getItem('isAuthenticated') === 'true');
   const [currentView, setCurrentView] = useState<ViewState>('dashboard');
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -143,9 +145,18 @@ const App: React.FC = () => {
     }
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('isAuthenticated');
+    setIsAuthenticated(false);
+  };
+
+  if (!isAuthenticated) {
+    return <Login onLogin={() => setIsAuthenticated(true)} />;
+  }
+
   return (
     <div className="flex h-screen bg-background-light dark:bg-background-dark overflow-hidden w-full">
-      <Sidebar currentView={currentView} setView={setCurrentView} />
+      <Sidebar currentView={currentView} setView={setCurrentView} onLogout={handleLogout} />
 
       <div className="flex-1 flex flex-col min-w-0">
         <Header

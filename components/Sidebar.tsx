@@ -5,9 +5,10 @@ import { ViewState } from '../types';
 interface SidebarProps {
   currentView: ViewState;
   setView: (view: ViewState) => void;
+  onLogout: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ currentView, setView }) => {
+const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, onLogout }) => {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
     { id: 'classes', label: 'Turmas', icon: 'group' },
@@ -76,7 +77,10 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView }) => {
           </div>
         </div>
 
-        <button className="flex items-center gap-3 px-3 py-2 border-t border-[#f0f2f4] dark:border-slate-800 pt-4 text-[#617589] hover:text-red-500 transition-colors">
+        <button
+          onClick={onLogout}
+          className="flex items-center gap-3 px-3 py-2 border-t border-[#f0f2f4] dark:border-slate-800 pt-4 text-[#617589] hover:text-red-500 transition-colors w-full"
+        >
           <span className="material-symbols-outlined text-sm">logout</span>
           <span className="text-sm font-medium">Sair da Conta</span>
         </button>
