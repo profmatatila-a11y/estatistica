@@ -15,28 +15,45 @@ export const fetchSheetData = async (sheetUrl: string): Promise<RawResponse[]> =
         const response = await fetch(sheetUrl);
         const csvData = await response.text();
 
-        // Handle both comma and semi-colon (common in Brazil)
         const lines = csvData.split('\n').filter(line => line.trim() !== '');
         if (lines.length < 2) return [];
 
+        // Detect delimiter ( Brazilian sheets often use ; )
         const delimiter = lines[0].includes(';') ? ';' : ',';
-        const headers = lines[0].split(delimiter).map(h => h.trim().replace(/"/g, ''));
+
+        // Better CSV splitting to handle quoted values with commas
+        const splitCSV = (text: string) => {
+            const regex = new RegExp(`${delimiter}(?=(?:(?:[^"]*"){2})*[^"]*$)`);
+            return text.split(regex).map(v => v.trim().replace(/^"|"$/g, ''));
+        };
+
+        const headers = splitCSV(lines[0]);
+        const headerLower = headers.map(h => h.toLowerCase());
+
+        // Dynamic Column Finder
+        const findCol = (keywords: string[]) => {
+            return headerLower.findIndex(h => keywords.some(k => h.includes(k)));
+        };
+
+        const idxEmail = findCol(['email', 'endereço']);
+        const idxName = findCol(['nome', 'aluno', 'identificação', 'digite o seu']);
+        const idxScore = findCol(['pontuação', 'score', 'nota', 'ponto']);
+        const idxClass = findCol(['turma', 'série', 'ano', 'classe']);
+        const idxTime = findCol(['carimbo', 'data', 'timestamp', 'horário']);
 
         return lines.slice(1).map(line => {
-            const values = line.split(delimiter).map(v => v.trim().replace(/"/g, ''));
+            const values = splitCSV(line);
             const obj: any = {};
             headers.forEach((header, index) => {
                 obj[header] = values[index];
             });
 
-            // Mapping based on the image provided:
-            // A (0): Carimbo, B (1): Email, C (2): Pontuação, D (3): Nome, E (4): Turma
             return {
-                timestamp: values[0] || '',
-                email: values[1] || '',
-                scoreString: values[2] || '0',
-                name: values[3] || '',
-                class: values[4] || '',
+                timestamp: (idxTime !== -1 ? values[idxTime] : values[0]) || '',
+                email: (idxEmail !== -1 ? values[idxEmail] : values[1]) || '',
+                scoreString: (idxScore !== -1 ? values[idxScore] : values[2]) || '0',
+                name: (idxName !== -1 ? values[idxName] : values[3]) || '',
+                class: (idxClass !== -1 ? values[idxClass] : values[4]) || 'Sem Turma',
                 ...obj
             } as RawResponse;
         });
