@@ -6,7 +6,8 @@ export interface RawResponse {
     email: string;
     name: string;
     class: string;
-    [key: string]: string; // For question answers
+    scoreString: string;
+    [key: string]: string;
 }
 
 export const fetchSheetData = async (sheetUrl: string): Promise<RawResponse[]> => {
@@ -14,26 +15,28 @@ export const fetchSheetData = async (sheetUrl: string): Promise<RawResponse[]> =
         const response = await fetch(sheetUrl);
         const csvData = await response.text();
 
+        // Handle both comma and semi-colon (common in Brazil)
         const lines = csvData.split('\n').filter(line => line.trim() !== '');
         if (lines.length < 2) return [];
 
-        const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+        const delimiter = lines[0].includes(';') ? ';' : ',';
+        const headers = lines[0].split(delimiter).map(h => h.trim().replace(/"/g, ''));
 
         return lines.slice(1).map(line => {
-            const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
+            const values = line.split(delimiter).map(v => v.trim().replace(/"/g, ''));
             const obj: any = {};
             headers.forEach((header, index) => {
                 obj[header] = values[index];
             });
 
-            // Map standard fields based on common Google Forms headers or position
-            // For a more robust solution, we'd want to explicitly define which column is what
-            // but here we rely on the user having: carimbo de data/hora (timestamp), email, nome, turma
+            // Mapping based on the image provided:
+            // A (0): Carimbo, B (1): Email, C (2): Pontuação, D (3): Nome, E (4): Turma
             return {
-                timestamp: values[0],
-                email: values[1],
-                name: values[2],
-                class: values[3],
+                timestamp: values[0] || '',
+                email: values[1] || '',
+                scoreString: values[2] || '0',
+                name: values[3] || '',
+                class: values[4] || '',
                 ...obj
             } as RawResponse;
         });
@@ -44,7 +47,6 @@ export const fetchSheetData = async (sheetUrl: string): Promise<RawResponse[]> =
 };
 
 export const processStats = (data: RawResponse[]) => {
-    // Logic to calculate stats from raw responses
     const classMap: Record<string, { totalScore: number; count: number; studentEmails: Set<string>; exercises: number }> = {};
     const studentMap: Record<string, { name: string; class: string; scores: number[]; email: string }> = {};
 
@@ -53,23 +55,24 @@ export const processStats = (data: RawResponse[]) => {
         const email = resp.email;
         const name = resp.name;
 
-        // Identify numerical answers (grades)
-        // For this example, let's assume columns after index 3 might contain scores or we can parse numbers
-        let score = 0;
-        let scoreCount = 0;
-        Object.keys(resp).forEach((key, idx) => {
-            if (idx > 3 && !isNaN(parseFloat(resp[key]))) {
-                score += parseFloat(resp[key]);
-                scoreCount++;
+        // Parse score string like "3 / 7" or just a number
+        let finalScore = 0;
+        if (resp.scoreString.includes('/')) {
+            const parts = resp.scoreString.split('/');
+            const got = parseFloat(parts[0]);
+            const total = parseFloat(parts[1]);
+            if (!isNaN(got) && !isNaN(total) && total > 0) {
+                finalScore = (got / total) * 10; // Normalized to 0-10 scale
             }
-        });
-        const avgScore = scoreCount > 0 ? score / scoreCount : 0;
+        } else {
+            finalScore = parseFloat(resp.scoreString) || 0;
+        }
 
         // Class Stats
         if (!classMap[className]) {
             classMap[className] = { totalScore: 0, count: 0, studentEmails: new Set(), exercises: 0 };
         }
-        classMap[className].totalScore += avgScore;
+        classMap[className].totalScore += finalScore;
         classMap[className].count += 1;
         classMap[className].studentEmails.add(email);
         classMap[className].exercises += 1;
@@ -78,7 +81,7 @@ export const processStats = (data: RawResponse[]) => {
         if (!studentMap[email]) {
             studentMap[email] = { name, class: className, scores: [], email };
         }
-        studentMap[email].scores.push(avgScore);
+        studentMap[email].scores.push(finalScore);
     });
 
     const classStats: ClassStats[] = Object.entries(classMap).map(([name, data], idx) => ({
@@ -88,13 +91,13 @@ export const processStats = (data: RawResponse[]) => {
         studentCount: data.studentEmails.size,
         averageScore: data.count > 0 ? (data.totalScore / data.count) : 0,
         exercisesCount: data.exercises,
-        progress: Math.min(100, (data.exercises / 10) * 100) // Mock progress logic
+        progress: Math.min(100, (data.exercises / 5) * 100)
     }));
 
     const students: Student[] = Object.entries(studentMap).map(([email, data], idx) => {
         const avg = data.scores.reduce((a, b) => a + b, 0) / data.scores.length;
         return {
-            id: String(idx + 1),
+            id: email, // Use email as unique ID
             name: data.name,
             avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.name}`,
             class: data.class,
