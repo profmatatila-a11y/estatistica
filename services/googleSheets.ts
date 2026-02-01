@@ -1,5 +1,5 @@
 
-import { Student, Activity, ClassStats } from '../types';
+import { Student, Activity, ClassStats, ListStats } from '../types';
 
 export interface RawResponse {
     timestamp: string;
@@ -53,6 +53,8 @@ export const processStats = (data: RawResponse[], targetActivities: number = 5) 
     // Timeline Data for Evolution Chart
     const timelineMap: Record<string, { total: number; count: number }> = {};
 
+    const listMap: Record<string, { totalScore: number; count: number }> = {};
+
     data.forEach(resp => {
         const className = resp.class || 'Sem Turma';
         const email = resp.email;
@@ -74,6 +76,31 @@ export const processStats = (data: RawResponse[], targetActivities: number = 5) 
             const raw = parseFloat(resp.scoreString) || 0;
             finalScore = raw > 10 ? raw / 10 : raw;
         }
+
+        // List Stats Logic
+        let listName = '';
+        // Look for a column that might contain the list name
+        const possibleListKeys = Object.keys(resp).filter(k =>
+            (k.toLowerCase().includes('lista') ||
+                k.toLowerCase().includes('atividade') ||
+                k.toLowerCase().includes('quais') ||
+                k.toLowerCase().includes('título')) &&
+            !['name', 'class', 'email', 'timestamp', 'scoreString'].includes(k)
+        );
+
+        if (possibleListKeys.length > 0) {
+            listName = resp[possibleListKeys[0]];
+        }
+
+        if (!listName || listName.length < 2) {
+            listName = `Lista ${dateStr}`;
+        }
+
+        if (!listMap[listName]) {
+            listMap[listName] = { totalScore: 0, count: 0 };
+        }
+        listMap[listName].totalScore += finalScore;
+        listMap[listName].count += 1;
 
         // Evolution/Timeline Map
         if (!timelineMap[dateStr]) timelineMap[dateStr] = { total: 0, count: 0 };
@@ -116,6 +143,13 @@ export const processStats = (data: RawResponse[], targetActivities: number = 5) 
         progress: Math.min(100, (data.exercises / targetActivities) * 100)
     }));
 
+    const listStats: ListStats[] = Object.entries(listMap).map(([name, data], idx) => ({
+        id: String(idx + 1),
+        name,
+        averageScore: Number(((data.totalScore / data.count) * 10).toFixed(1)),
+        submissionCount: data.count
+    })).sort((a, b) => b.submissionCount - a.submissionCount);
+
     const students: Student[] = Object.entries(studentMap).map(([email, data], idx) => {
         const avg = data.history.reduce((a, b) => a + b.score, 0) / data.history.length;
         return {
@@ -136,5 +170,5 @@ export const processStats = (data: RawResponse[], targetActivities: number = 5) 
         };
     });
 
-    return { classStats, students, evolutionData };
+    return { classStats, students, evolutionData, listStats };
 };

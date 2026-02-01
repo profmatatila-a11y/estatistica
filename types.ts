@@ -39,4 +39,11 @@ export interface DataSource {
   errorMsg?: string;
 }
 
-export type ViewState = 'dashboard' | 'classes' | 'students' | 'student-detail' | 'data-sources' | 'reports';
+export interface ListStats {
+  id: string;
+  name: string;
+  averageScore: number;
+  submissionCount: number;
+}
+
+export type ViewState = 'dashboard' | 'classes' | 'students' | 'student-detail' | 'list-stats' | 'data-sources' | 'reports';

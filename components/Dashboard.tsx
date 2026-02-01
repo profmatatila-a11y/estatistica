@@ -12,9 +12,10 @@ interface DashboardProps {
   classStats: ClassStats[];
   activityName: string;
   evolutionData: any[];
+  listStats: any[];
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ onStudentClick, students, classStats, activityName, evolutionData }) => {
+const Dashboard: React.FC<DashboardProps> = ({ onStudentClick, students, classStats, activityName, evolutionData, listStats }) => {
   const overallAvg = students.length > 0
     ? (students.reduce((acc, s) => acc + s.average, 0) / students.length).toFixed(1)
     : '0.0';
@@ -39,7 +40,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onStudentClick, students, classSt
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="bg-white dark:bg-slate-900 flex flex-col gap-2 rounded-xl p-6 border border-[#dbe0e6] dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex justify-between items-start">
             <p className="text-[#617589] dark:text-slate-400 text-sm font-medium">Média Geral</p>
@@ -70,6 +71,17 @@ const Dashboard: React.FC<DashboardProps> = ({ onStudentClick, students, classSt
           <p className="text-[#111418] dark:text-white tracking-tight text-3xl font-bold">{students.length}</p>
           <p className="text-slate-500 text-sm font-medium flex items-center gap-1">
             Alunos ativos na planilha
+          </p>
+        </div>
+
+        <div className="bg-white dark:bg-slate-900 flex flex-col gap-2 rounded-xl p-6 border border-[#dbe0e6] dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex justify-between items-start">
+            <p className="text-[#617589] dark:text-slate-400 text-sm font-medium">Total de Listas</p>
+            <span className="p-1.5 bg-purple-100 dark:bg-purple-900/30 rounded text-purple-600 dark:text-purple-400 material-symbols-outlined text-sm">format_list_bulleted</span>
+          </div>
+          <p className="text-[#111418] dark:text-white tracking-tight text-3xl font-bold">{listStats?.length || 0}</p>
+          <p className="text-slate-500 text-sm font-medium flex items-center gap-1">
+            Listas identificadas
           </p>
         </div>
       </div>
