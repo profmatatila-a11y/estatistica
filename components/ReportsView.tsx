@@ -15,16 +15,36 @@ const ReportsView: React.FC<ReportsViewProps> = ({ classStats, students }) => {
 
     return (
         <div className="p-8 flex flex-col gap-8 animate-in fade-in duration-500">
-            <div className="flex justify-between items-start">
+            <div className="flex justify-between items-start print:hidden">
                 <div>
                     <h3 className="text-2xl font-bold text-[#111418] dark:text-white">Relatórios Analíticos</h3>
                     <p className="text-[#617589] dark:text-slate-400">Análise comparativa e desempenho individual detalhado.</p>
                 </div>
-                <button className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-[#dbe0e6] dark:border-slate-700 rounded-lg text-sm font-bold text-[#111418] dark:text-white hover:bg-slate-50 transition-colors shadow-sm">
-                    <span className="material-symbols-outlined text-lg">download</span>
+                <button
+                    onClick={() => window.print()}
+                    className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-[#dbe0e6] dark:border-slate-700 rounded-lg text-sm font-bold text-[#111418] dark:text-white hover:bg-slate-50 transition-colors shadow-sm"
+                >
+                    <span className="material-symbols-outlined text-lg">picture_as_pdf</span>
                     Exportar PDF
                 </button>
             </div>
+
+            <style dangerouslySetInnerHTML={{
+                __html: `
+        @media print {
+          nav, aside, header, .print\\:hidden { display: none !important; }
+          main { margin: 0 !important; padding: 0 !important; width: 100% !important; }
+          .p-8 { padding: 0 !important; }
+          .shadow-sm, .shadow-lg { box-shadow: none !important; border: 1px solid #eee !important; }
+          .bg-primary { background-color: #137fec !important; -webkit-print-color-adjust: exact; }
+          .text-white { color: #fff !important; }
+          body { background: white !important; }
+          .grid { display: block !important; }
+          .lg\\:col-span-2, .lg\\:col-span-3 { width: 100% !important; margin-bottom: 20px; }
+          table { width: 100% !important; border-collapse: collapse; }
+          th, td { border: 1px solid #eee !important; }
+        }
+      `}} />
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Comparison Chart */}
@@ -114,7 +134,7 @@ const ReportsView: React.FC<ReportsViewProps> = ({ classStats, students }) => {
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase ${s.average >= 70 ? 'bg-green-100 text-green-700' :
-                                                s.average >= 50 ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700'
+                                            s.average >= 50 ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700'
                                             }`}>
                                             {s.average >= 70 ? 'Excelente' : s.average >= 50 ? 'Regular' : 'Atenção'}
                                         </span>
