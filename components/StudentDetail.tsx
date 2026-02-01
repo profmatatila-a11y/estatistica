@@ -30,7 +30,7 @@ const StudentDetail: React.FC<StudentDetailProps> = ({ student, onBack }) => {
         <div className="flex items-center gap-6">
           <button
             onClick={onBack}
-            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"
+            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors print:hidden"
           >
             <span className="material-symbols-outlined">arrow_back</span>
           </button>
@@ -40,15 +40,48 @@ const StudentDetail: React.FC<StudentDetailProps> = ({ student, onBack }) => {
             alt={student.name}
           />
           <div className="flex flex-col">
-            <h1 className="text-2xl sm:text-3xl font-bold text-[#111418] dark:text-white">{student.name}</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-[#111418] dark:text-white uppercase">{student.name}</h1>
             <p className="text-[#617589] dark:text-slate-400 text-base">Turma: {student.class}</p>
-            <div className="flex items-center gap-2 mt-2 text-sm text-green-600 font-bold">
+            <div className="flex items-center gap-2 mt-2 text-sm text-green-600 font-bold print:hidden">
               <span className="material-symbols-outlined text-sm">cloud_done</span>
               <span>Dados sincronizados da planilha</span>
             </div>
           </div>
         </div>
+        <button
+          onClick={() => window.print()}
+          className="flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-xl font-bold hover:scale-105 transition-all shadow-lg shadow-primary/20 print:hidden"
+        >
+          <span className="material-symbols-outlined">picture_as_pdf</span>
+          Gerar Relatório para Pais
+        </button>
       </div>
+
+      <style dangerouslySetInnerHTML={{
+        __html: `
+        @media print {
+          nav, aside, header, button, .print\\:hidden { display: none !important; }
+          main { margin: 0 !important; padding: 20px !important; width: 100% !important; }
+          .rounded-2xl, .rounded-xl { border-radius: 0 !important; border: none !important; box-shadow: none !important; }
+          .bg-white { background: white !important; }
+          body { background: white !important; }
+          .text-2xl { font-size: 24pt !important; }
+          .border { border: 1px solid #eee !important; }
+          .shadow-sm, .shadow-lg { box-shadow: none !important; }
+          
+          /* Header for report */
+          body::before {
+            content: "RELATÓRIO DE DESEMPENHO PEDAGÓGICO - PROF. ÁTILA OLIVEIRA";
+            display: block;
+            text-align: center;
+            font-weight: bold;
+            font-size: 14pt;
+            margin-bottom: 30px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #137fec;
+          }
+        }
+      `}} />
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
