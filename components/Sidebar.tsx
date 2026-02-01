@@ -13,6 +13,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, onLogout }) => 
     { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
     { id: 'classes', label: 'Turmas', icon: 'group' },
     { id: 'list-stats', label: 'Listas', icon: 'format_list_bulleted' },
+    { id: 'questions', label: 'Itens (Questões)', icon: 'rule' },
     { id: 'reports', label: 'Relatórios', icon: 'analytics' },
     { id: 'students', label: 'Alunos', icon: 'school' },
     { id: 'data-sources', label: 'Fontes de Dados', icon: 'database' },

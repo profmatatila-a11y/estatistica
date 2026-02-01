@@ -46,4 +46,19 @@ export interface ListStats {
   submissionCount: number;
 }
 
-export type ViewState = 'dashboard' | 'classes' | 'students' | 'student-detail' | 'list-stats' | 'data-sources' | 'reports';
+export interface AnswerDistribution {
+  answer: string;
+  count: number;
+  percentage: number;
+}
+
+export interface QuestionStat {
+  id: string;
+  title: string;
+  totalAnswers: number;
+  distribution: AnswerDistribution[];
+  mostCommonAnswer: string;
+  isQuiz?: boolean;
+}
+
+export type ViewState = 'dashboard' | 'classes' | 'students' | 'student-detail' | 'list-stats' | 'questions' | 'data-sources' | 'reports';

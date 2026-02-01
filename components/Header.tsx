@@ -13,6 +13,7 @@ const Header: React.FC<HeaderProps> = ({ currentView, isDarkMode, toggleDarkMode
     switch (currentView) {
       case 'dashboard': return 'Dashboard de Desempenho';
       case 'list-stats': return 'Estatísticas por Lista';
+      case 'questions': return 'Análise de Itens (Questões)';
       case 'student-detail': return 'Perfil Individual do Aluno';
       case 'data-sources': return 'Configuração de Fontes de Dados';
       default: return 'Painel de Controle';

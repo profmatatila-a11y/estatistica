@@ -1,5 +1,5 @@
 
-import { Student, Activity, ClassStats, ListStats } from '../types';
+import { Student, Activity, ClassStats, ListStats, QuestionStat } from '../types';
 
 export interface RawResponse {
     timestamp: string;
@@ -170,5 +170,39 @@ export const processStats = (data: RawResponse[], targetActivities: number = 5) 
         };
     });
 
-    return { classStats, students, evolutionData, listStats };
+    const questionMap: Record<string, Record<string, number>> = {};
+    const excludedHeaders = ['name', 'class', 'email', 'timestamp', 'scoreString', 'carimbo de data/hora', 'endereço de e-mail', 'nome completo', 'turma', 'pontuação', 'carimbo'];
+
+    data.forEach(resp => {
+        // ... (existing logic for names, emails, lists remains same)
+
+        // Question Analysis logic
+        Object.entries(resp).forEach(([key, value]) => {
+            if (excludedHeaders.some(h => key.toLowerCase().includes(h))) return;
+            if (!value || value.length === 0) return;
+
+            if (!questionMap[key]) questionMap[key] = {};
+            if (!questionMap[key][value]) questionMap[key][value] = 0;
+            questionMap[key][value] += 1;
+        });
+    });
+
+    const questionStats: QuestionStat[] = Object.entries(questionMap).map(([title, answers], idx) => {
+        const totalAnswers = Object.values(answers).reduce((a, b) => a + b, 0);
+        const distribution = Object.entries(answers).map(([answer, count]) => ({
+            answer,
+            count,
+            percentage: Number(((count / totalAnswers) * 100).toFixed(1))
+        })).sort((a, b) => b.count - a.count);
+
+        return {
+            id: String(idx + 1),
+            title,
+            totalAnswers,
+            distribution,
+            mostCommonAnswer: distribution[0]?.answer || ''
+        };
+    });
+
+    return { classStats, students, evolutionData, listStats, questionStats };
 };

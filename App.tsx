@@ -9,8 +9,9 @@ import ClassesView from './components/ClassesView';
 import ReportsView from './components/ReportsView';
 import StudentsView from './components/StudentsView';
 import Login from './components/Login';
-import { ViewState, Student, ClassStats, ListStats } from './types';
+import { ViewState, Student, ClassStats, ListStats, QuestionStat } from './types';
 import ListStatsView from './components/ListStatsView';
+import QuestionsAnalysisView from './components/QuestionsAnalysisView';
 import { fetchSheetData, processStats } from './services/googleSheets';
 
 const App: React.FC = () => {
@@ -22,7 +23,8 @@ const App: React.FC = () => {
     students: Student[],
     classStats: ClassStats[],
     evolutionData: any[],
-    listStats: ListStats[]
+    listStats: ListStats[],
+    questionStats: QuestionStat[]
   } | null>(null);
 
   // You can replace this with your actual Google Sheets Published CSV URL
@@ -130,6 +132,8 @@ const App: React.FC = () => {
         />;
       case 'list-stats':
         return <ListStatsView listStats={data?.listStats || []} />;
+      case 'questions':
+        return <QuestionsAnalysisView questionStats={data?.questionStats || []} />;
       case 'students':
         return <StudentsView
           students={data?.students || []}
