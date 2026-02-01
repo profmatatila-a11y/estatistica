@@ -4,16 +4,17 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
 import { Student, ClassStats, Activity } from '../types';
-import { ACTIVITIES, EVOLUTION_DATA } from '../mockData';
+import { ACTIVITIES } from '../mockData';
 
 interface DashboardProps {
   onStudentClick: (id: string) => void;
   students: Student[];
   classStats: ClassStats[];
   activityName: string;
+  evolutionData: any[];
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ onStudentClick, students, classStats, activityName }) => {
+const Dashboard: React.FC<DashboardProps> = ({ onStudentClick, students, classStats, activityName, evolutionData }) => {
   const overallAvg = students.length > 0
     ? (students.reduce((acc, s) => acc + s.average, 0) / students.length).toFixed(1)
     : '0.0';
@@ -64,7 +65,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onStudentClick, students, classSt
         <div className="bg-white dark:bg-slate-900 flex flex-col gap-2 rounded-xl p-6 border border-[#dbe0e6] dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex justify-between items-start">
             <p className="text-[#617589] dark:text-slate-400 text-sm font-medium">Total de Alunos</p>
-            <span className="p-1.5 bg-orange-100 dark:bg-orange-900/30 rounded text-orange-600 dark:text-orange-400 material-symbols-outlined text-sm">group</span>
+            <span className="p-1.5 bg-orange-100 dark:bg-orange-900/30 rounded text-orange-600 dark:text-orange-400 material-symbols-outlined text-sm">groups</span>
           </div>
           <p className="text-[#111418] dark:text-white tracking-tight text-3xl font-bold">{students.length}</p>
           <p className="text-slate-500 text-sm font-medium flex items-center gap-1">
@@ -73,33 +74,43 @@ const Dashboard: React.FC<DashboardProps> = ({ onStudentClick, students, classSt
         </div>
       </div>
 
-      {/* Main Analysis Grid */}
+      {/* Main Analysis Section */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Evolution Chart */}
         <div className="lg:col-span-8 bg-white dark:bg-slate-900 rounded-xl border border-[#dbe0e6] dark:border-slate-800 p-6 shadow-sm">
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex items-center justify-between mb-8">
             <div>
               <h4 className="text-[#111418] dark:text-white text-lg font-bold">Evolução da Nota Média</h4>
-              <p className="text-[#617589] dark:text-slate-400 text-sm">Desempenho consolidado</p>
+              <p className="text-sm text-[#617589]">Desempenho consolidado</p>
             </div>
           </div>
-          <div className="h-[280px] w-full">
+          <div className="w-full h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={EVOLUTION_DATA}>
+              <AreaChart data={evolutionData.length > 0 ? evolutionData : [{ month: 'Sem dados', score: 0 }]}>
                 <defs>
                   <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#137fec" stopOpacity={0.2} />
+                    <stop offset="5%" stopColor="#137fec" stopOpacity={0.1} />
                     <stop offset="95%" stopColor="#137fec" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                <XAxis dataKey="month" stroke="#64748b" fontSize={12} axisLine={false} tickLine={false} dy={10} />
-                <YAxis stroke="#64748b" fontSize={12} axisLine={false} tickLine={false} dx={-10} domain={[0, 10]} />
-                <Tooltip
-                  contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0' }}
-                  itemStyle={{ color: '#137fec', fontWeight: 'bold' }}
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                <XAxis
+                  dataKey="month"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: '#617589', fontSize: 12 }}
+                  dy={10}
                 />
-                <Area type="monotone" dataKey="score" stroke="#137fec" strokeWidth={3} fillOpacity={1} fill="url(#colorScore)" />
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: '#617589', fontSize: 12 }}
+                  domain={[0, 100]}
+                />
+                <Tooltip
+                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                />
+                <Area type="monotone" dataKey="score" name="Média" stroke="#137fec" strokeWidth={3} fillOpacity={1} fill="url(#colorScore)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>

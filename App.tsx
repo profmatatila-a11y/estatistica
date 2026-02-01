@@ -12,7 +12,11 @@ const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<ViewState>('dashboard');
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [data, setData] = useState<{ students: Student[], classStats: ClassStats[] } | null>(null);
+  const [data, setData] = useState<{
+    students: Student[],
+    classStats: ClassStats[],
+    evolutionData: any[]
+  } | null>(null);
 
   // You can replace this with your actual Google Sheets Published CSV URL
   const [sheetUrl, setSheetUrl] = useState(localStorage.getItem('sheetUrl') || '');
@@ -36,8 +40,8 @@ const App: React.FC = () => {
     setLoading(true);
     try {
       const rawData = await fetchSheetData(url);
-      const processed = processStats(rawData);
-      setData(processed);
+      const { students, classStats, evolutionData } = processStats(rawData);
+      setData({ students, classStats, evolutionData });
       localStorage.setItem('sheetUrl', url);
     } catch (error) {
       alert('Erro ao carregar dados da planilha. Verifique se ela está publicada como CSV.');
@@ -89,6 +93,7 @@ const App: React.FC = () => {
           students={data?.students || []}
           classStats={data?.classStats || []}
           activityName={activityName}
+          evolutionData={data?.evolutionData || []}
         />;
       case 'student-detail':
         const student = data?.students.find(s => s.id === selectedStudentId);

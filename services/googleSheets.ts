@@ -50,24 +50,35 @@ export const processStats = (data: RawResponse[]) => {
     const classMap: Record<string, { totalScore: number; count: number; studentEmails: Set<string>; exercises: number }> = {};
     const studentMap: Record<string, { name: string; class: string; scores: number[]; email: string }> = {};
 
+    // Timeline Data for Evolution Chart
+    const timelineMap: Record<string, { total: number; count: number }> = {};
+
     data.forEach(resp => {
         const className = resp.class || 'Sem Turma';
         const email = resp.email;
         const name = resp.name;
 
-        // Parse score string like "3 / 7" or just a number
+        // Extract date from timestamp (format: "DD/MM/YYYY HH:mm:ss")
+        const dateStr = resp.timestamp.split(' ')[0] || 'Sem Data';
+
+        // Parse score
         let finalScore = 0;
         if (resp.scoreString.includes('/')) {
             const parts = resp.scoreString.split('/');
             const got = parseFloat(parts[0]);
             const total = parseFloat(parts[1]);
             if (!isNaN(got) && !isNaN(total) && total > 0) {
-                finalScore = (got / total) * 100; // Normalized to 0-100 scale for % display
+                finalScore = (got / total) * 10; // Normalized to 0-10 for chart
             }
         } else {
             const raw = parseFloat(resp.scoreString) || 0;
-            finalScore = raw <= 10 ? raw * 10 : raw; // Assume 0-10 or 0-100
+            finalScore = raw > 10 ? raw / 10 : raw;
         }
+
+        // Evolution/Timeline Map
+        if (!timelineMap[dateStr]) timelineMap[dateStr] = { total: 0, count: 0 };
+        timelineMap[dateStr].total += finalScore;
+        timelineMap[dateStr].count += 1;
 
         // Class Stats
         if (!classMap[className]) {
@@ -85,12 +96,22 @@ export const processStats = (data: RawResponse[]) => {
         studentMap[email].scores.push(finalScore);
     });
 
+    const evolutionData = Object.entries(timelineMap).map(([date, data]) => ({
+        month: date, // Using date instead of month label
+        score: Number(((data.total / data.count) * 10).toFixed(1)),
+        avg: Number(((data.total / data.count) * 10).toFixed(1))
+    })).sort((a, b) => {
+        const [d1, m1, y1] = a.month.split('/').map(Number);
+        const [d2, m2, y2] = b.month.split('/').map(Number);
+        return new Date(y1, m1 - 1, d1).getTime() - new Date(y2, m2 - 1, d2).getTime();
+    });
+
     const classStats: ClassStats[] = Object.entries(classMap).map(([name, data], idx) => ({
         id: String(idx + 1),
         name,
         period: 'Geral',
         studentCount: data.studentEmails.size,
-        averageScore: data.count > 0 ? (data.totalScore / data.count) : 0,
+        averageScore: (data.totalScore / data.count) * 10, // Back to 0-100 for display
         exercisesCount: data.exercises,
         progress: Math.min(100, (data.exercises / 5) * 100)
     }));
@@ -102,7 +123,7 @@ export const processStats = (data: RawResponse[]) => {
             name: data.name,
             avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.name}`,
             class: data.class,
-            average: Number(avg.toFixed(1)),
+            average: Number((avg * 10).toFixed(1)), // Scale to 0-100
             trend: 0,
             exercisesDone: data.scores.length,
             completionRate: 100,
@@ -110,5 +131,5 @@ export const processStats = (data: RawResponse[]) => {
         };
     });
 
-    return { classStats, students };
+    return { classStats, students, evolutionData };
 };
