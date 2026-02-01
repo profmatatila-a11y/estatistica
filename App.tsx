@@ -96,7 +96,7 @@ const App: React.FC = () => {
           activityName={activityName}
           evolutionData={data?.evolutionData || []}
         />;
-      case 'turmas':
+      case 'classes':
         return <ClassesView
           classStats={data?.classStats || []}
           students={data?.students || []}
