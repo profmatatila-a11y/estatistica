@@ -6,6 +6,7 @@ import Dashboard from './components/Dashboard';
 import StudentDetail from './components/StudentDetail';
 import DataSources from './components/DataSources';
 import ClassesView from './components/ClassesView';
+import ReportsView from './components/ReportsView';
 import { ViewState, Student, ClassStats } from './types';
 import { fetchSheetData, processStats } from './services/googleSheets';
 
@@ -101,6 +102,11 @@ const App: React.FC = () => {
           classStats={data?.classStats || []}
           students={data?.students || []}
           onStudentClick={handleStudentClick}
+        />;
+      case 'reports':
+        return <ReportsView
+          classStats={data?.classStats || []}
+          students={data?.students || []}
         />;
       case 'student-detail':
         const student = data?.students.find(s => s.id === selectedStudentId);
