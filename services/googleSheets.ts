@@ -46,7 +46,7 @@ export const fetchSheetData = async (sheetUrl: string): Promise<RawResponse[]> =
     }
 };
 
-export const processStats = (data: RawResponse[]) => {
+export const processStats = (data: RawResponse[], targetActivities: number = 5) => {
     const classMap: Record<string, { totalScore: number; count: number; studentEmails: Set<string>; exercises: number }> = {};
     const studentMap: Record<string, { name: string; class: string; history: { month: string; score: number }[]; email: string }> = {};
 
@@ -113,7 +113,7 @@ export const processStats = (data: RawResponse[]) => {
         studentCount: data.studentEmails.size,
         averageScore: (data.totalScore / data.count) * 10, // Back to 0-100 for display
         exercisesCount: data.exercises,
-        progress: Math.min(100, (data.exercises / 5) * 100)
+        progress: Math.min(100, (data.exercises / targetActivities) * 100)
     }));
 
     const students: Student[] = Object.entries(studentMap).map(([email, data], idx) => {

@@ -26,6 +26,7 @@ const App: React.FC = () => {
   // You can replace this with your actual Google Sheets Published CSV URL
   const [sheetUrl, setSheetUrl] = useState(localStorage.getItem('sheetUrl') || '');
   const [activityName, setActivityName] = useState(localStorage.getItem('activityName') || 'Atividade de Matemática');
+  const [targetActivities, setTargetActivities] = useState(Number(localStorage.getItem('targetActivities')) || 5);
 
   useEffect(() => {
     if (isDarkMode) {
@@ -37,27 +38,39 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (sheetUrl) {
-      loadData(sheetUrl);
+      loadData(sheetUrl, targetActivities);
     }
-  }, [sheetUrl]);
+  }, [sheetUrl, targetActivities]);
 
-  const loadData = async (url: string) => {
+  const loadData = async (url: string, target: number = 5) => {
     setLoading(true);
     try {
       const rawData = await fetchSheetData(url);
-      const { students, classStats, evolutionData } = processStats(rawData);
-      setData({ students, classStats, evolutionData });
+      const processed = processStats(rawData, target);
+      setData(processed);
       localStorage.setItem('sheetUrl', url);
     } catch (error) {
-      alert('Erro ao carregar dados da planilha. Verifique se ela está publicada como CSV.');
+      console.error('Error loading data:', error);
+      alert('Erro ao carregar dados. Verifique se o link da planilha está correto e se ela está publicada como CSV.');
     } finally {
       setLoading(false);
     }
   };
 
+  const handleConnect = (url: string) => {
+    setSheetUrl(url);
+    localStorage.setItem('sheetUrl', url);
+    loadData(url, targetActivities);
+  };
+
   const handleNameChange = (name: string) => {
     setActivityName(name);
     localStorage.setItem('activityName', name);
+  };
+
+  const handleTargetChange = (target: number) => {
+    setTargetActivities(target);
+    localStorage.setItem('targetActivities', String(target));
   };
 
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
@@ -105,6 +118,7 @@ const App: React.FC = () => {
           classStats={data?.classStats || []}
           students={data?.students || []}
           onStudentClick={handleStudentClick}
+          targetActivities={targetActivities}
         />;
       case 'reports':
         return <ReportsView
