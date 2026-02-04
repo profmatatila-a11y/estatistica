@@ -44,7 +44,7 @@ const StudentDetail: React.FC<StudentDetailProps> = ({ student, onBack }) => {
             <p className="text-[#617589] dark:text-slate-400 text-base">Turma: {student.class}</p>
             <div className="flex items-center gap-2 mt-2 text-sm text-green-600 font-bold print:hidden">
               <span className="material-symbols-outlined text-sm">cloud_done</span>
-              <span>Dados sincronizados da planilha</span>
+              <span>Dados sincronizados do sistema</span>
             </div>
           </div>
         </div>
@@ -88,10 +88,10 @@ const StudentDetail: React.FC<StudentDetailProps> = ({ student, onBack }) => {
         <div className="bg-white dark:bg-slate-900 rounded-xl p-6 border border-[#dbe0e6] dark:border-slate-800 shadow-sm">
           <p className="text-[#617589] text-xs font-bold uppercase tracking-widest">Média do Aluno</p>
           <div className="flex items-baseline gap-2 mt-2">
-            <p className="text-3xl font-bold dark:text-white">{student.average}</p>
+            <p className="text-3xl font-bold dark:text-white">{student.average}%</p>
           </div>
           <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full mt-4 overflow-hidden">
-            <div className="bg-green-500 h-full" style={{ width: `${student.average * 10}%` }}></div>
+            <div className="bg-green-500 h-full" style={{ width: `${student.average}%` }}></div>
           </div>
         </div>
 
@@ -136,7 +136,7 @@ const StudentDetail: React.FC<StudentDetailProps> = ({ student, onBack }) => {
       <div className="bg-white dark:bg-slate-900 rounded-xl border border-[#dbe0e6] dark:border-slate-800 shadow-sm overflow-hidden">
         <div className="p-6 border-b border-[#f0f2f4] dark:border-slate-800">
           <h3 className="text-lg font-bold dark:text-white">Log de Atividades</h3>
-          <p className="text-sm text-[#617589]">Registros vinculados ao email: profmatatila@gmail.com</p>
+          <p className="text-sm text-[#617589]">Histórico completo de avaliações</p>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left">
@@ -145,27 +145,20 @@ const StudentDetail: React.FC<StudentDetailProps> = ({ student, onBack }) => {
                 <th className="px-6 py-4">Exercício</th>
                 <th className="px-6 py-4">Data</th>
                 <th className="px-6 py-4 text-center">Nota</th>
-                <th className="px-6 py-4 text-right">Arquivo</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#f0f2f4] dark:divide-slate-800 text-sm">
-              {historyData.map((item, i) => (
+              {student.history.slice().reverse().map((item, i) => (
                 <tr key={i} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex flex-col">
-                      <span className="font-bold dark:text-white">{item.name}</span>
-                      <span className="text-[10px] text-primary font-bold uppercase">{item.cat}</span>
+                      <span className="font-bold dark:text-white">{item.listName || 'Atividade'}</span>
+                      <span className="text-[10px] text-primary font-bold uppercase">Matemática</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-slate-500">{item.date}</td>
+                  <td className="px-6 py-4 text-slate-500">{item.month}</td>
                   <td className="px-6 py-4 text-center">
-                    <span className="font-bold text-green-600">{item.score.toFixed(1)}</span>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <button className="text-primary font-bold hover:underline flex items-center justify-end gap-1">
-                      <span className="material-symbols-outlined text-base">drive_file_move</span>
-                      Drive
-                    </button>
+                    <span className={`font-bold ${item.score >= 70 ? 'text-green-600' : 'text-red-500'}`}>{item.score.toFixed(1)}%</span>
                   </td>
                 </tr>
               ))}

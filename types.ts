@@ -63,4 +63,38 @@ export interface QuestionStat {
   isQuiz?: boolean;
 }
 
-export type ViewState = 'dashboard' | 'classes' | 'students' | 'student-detail' | 'list-stats' | 'questions' | 'data-sources' | 'reports';
+
+export interface Quiz {
+  id: string;
+  title: string;
+  description?: string;
+  custom_header?: string; // "Dizeres" customizáveis
+  target_class?: string;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface Question {
+  id: string;
+  quiz_id: string;
+  text: string; // HTML allowed from Rich Text
+  image_url?: string;
+  type: 'multiple_choice' | 'text';
+  points: number;
+  options?: { label: string; text: string; isCorrect: boolean }[];
+  correct_answer?: string;
+}
+
+export interface QuizAttempt {
+  id: string;
+  quiz_id: string;
+  student_name?: string;
+  student_email: string;
+  start_time: string;
+  end_time?: string;
+  score?: number;
+  status: 'in_progress' | 'completed';
+}
+
+export type ViewState = 'dashboard' | 'classes' | 'students' | 'student-detail' | 'list-stats' | 'questions' | 'data-sources' | 'reports' | 'quiz-builder' | 'quiz-list' | 'quiz-results';
+

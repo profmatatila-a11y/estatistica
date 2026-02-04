@@ -12,11 +12,16 @@ import Login from './components/Login';
 import { ViewState, Student, ClassStats, ListStats, QuestionStat } from './types';
 import ListStatsView from './components/ListStatsView';
 import QuestionsAnalysisView from './components/QuestionsAnalysisView';
-import { fetchSheetData, processStats } from './services/googleSheets';
-
+import { QuizList } from './components/Quiz/QuizList';
+import { QuizBuilder } from './components/Quiz/QuizBuilder';
+import { QuizTaker } from './components/Quiz/QuizTaker';
+import { QuizResults } from './components/Quiz/QuizResults';
+import { statsService } from './services/statsService';
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(localStorage.getItem('isAuthenticated') === 'true');
   const [currentView, setCurrentView] = useState<ViewState>('dashboard');
+  const [editingQuizId, setEditingQuizId] = useState<string | null>(null);
+  const [viewingQuizId, setViewingQuizId] = useState<string | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<{
@@ -26,6 +31,10 @@ const App: React.FC = () => {
     listStats: ListStats[],
     questionStats: QuestionStat[]
   } | null>(null);
+
+  // Check for Public Quiz URL
+  const queryParams = new URLSearchParams(window.location.search);
+  const publicQuizId = queryParams.get('quizId');
 
   // You can replace this with your actual Google Sheets Published CSV URL
   const [sheetUrl, setSheetUrl] = useState(localStorage.getItem('sheetUrl') || '');
@@ -41,30 +50,26 @@ const App: React.FC = () => {
   }, [isDarkMode]);
 
   useEffect(() => {
-    if (sheetUrl) {
-      loadData(sheetUrl, targetActivities);
+    // Load stats from Supabase
+    if (!publicQuizId) {
+      loadData(targetActivities);
     }
-  }, [sheetUrl, targetActivities]);
+  }, [targetActivities, publicQuizId]);
 
-  const loadData = async (url: string, target: number = 5) => {
+  const loadData = async (target: number = 5) => {
     setLoading(true);
     try {
-      const rawData = await fetchSheetData(url);
-      const processed = processStats(rawData, target);
+      const processed = await statsService.fetchAllStats(target);
       setData(processed);
-      localStorage.setItem('sheetUrl', url);
     } catch (error) {
       console.error('Error loading data:', error);
-      alert('Erro ao carregar dados. Verifique se o link da planilha está correto e se ela está publicada como CSV.');
     } finally {
       setLoading(false);
     }
   };
 
   const handleConnect = (url: string) => {
-    setSheetUrl(url);
-    localStorage.setItem('sheetUrl', url);
-    loadData(url, targetActivities);
+    loadData(targetActivities);
   };
 
   const handleNameChange = (name: string) => {
@@ -99,22 +104,6 @@ const App: React.FC = () => {
         <p className="text-[#617589] font-medium">Sincronizando com Google Drive...</p>
       </div>
     );
-
-    if (!sheetUrl && currentView !== 'data-sources') {
-      return (
-        <div className="flex flex-col items-center justify-center h-full p-8 text-center gap-4">
-          <span className="material-symbols-outlined text-6xl text-primary/40">database</span>
-          <h3 className="text-xl font-bold dark:text-white">Nenhuma fonte de dados conectada</h3>
-          <p className="text-[#617589] max-w-md">Para começar, conecte o link da sua planilha do Google nas configurações.</p>
-          <button
-            onClick={() => setCurrentView('data-sources')}
-            className="px-6 py-3 bg-primary text-white rounded-xl font-bold hover:scale-105 transition-all shadow-lg shadow-primary/20"
-          >
-            Configurar Conexão
-          </button>
-        </div>
-      );
-    }
 
     switch (currentView) {
       case 'dashboard':
@@ -166,6 +155,29 @@ const App: React.FC = () => {
           targetActivities={targetActivities}
           onTargetChange={handleTargetChange}
         />;
+      case 'quiz-list':
+        return <QuizList
+          onEdit={(id) => {
+            setEditingQuizId(id);
+            setCurrentView('quiz-builder');
+          }}
+          onCreateNew={() => {
+            setEditingQuizId(null);
+            setCurrentView('quiz-builder');
+          }}
+          onViewResults={(id) => {
+            setViewingQuizId(id);
+            setCurrentView('quiz-results');
+          }}
+        />;
+      case 'quiz-builder':
+        return <QuizBuilder
+          editingQuizId={editingQuizId}
+          onCancel={() => setCurrentView('quiz-list')}
+          onSuccess={() => setCurrentView('quiz-list')}
+        />;
+      case 'student-quiz-menu':
+        return <QuizTaker userEmail="aluno_teste@exemplo.com" />;
       default:
         return (
           <div className="flex flex-col items-center justify-center h-full text-[#617589]">
@@ -186,6 +198,11 @@ const App: React.FC = () => {
     localStorage.removeItem('isAuthenticated');
     setIsAuthenticated(false);
   };
+
+  // PUBLIC QUIZ ROUTE - Bypass Authentication
+  if (publicQuizId) {
+    return <QuizTaker quizId={publicQuizId} />;
+  }
 
   if (!isAuthenticated) {
     return <Login onLogin={() => setIsAuthenticated(true)} />;

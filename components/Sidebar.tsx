@@ -16,7 +16,8 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, onLogout }) => 
     { id: 'questions', label: 'Itens (Questões)', icon: 'rule' },
     { id: 'reports', label: 'Relatórios', icon: 'analytics' },
     { id: 'students', label: 'Alunos', icon: 'school' },
-    { id: 'data-sources', label: 'Fontes de Dados', icon: 'database' },
+    { id: 'data-sources', label: 'Configurações', icon: 'settings' },
+    { id: 'quiz-list', label: 'Meus Quizzes', icon: 'quiz', view: 'quiz-list' },
   ];
 
   return (
@@ -86,8 +87,8 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, onLogout }) => 
         <div className="flex items-center gap-3 px-3 py-3 rounded-xl bg-green-50 dark:bg-green-900/10 border border-green-100 dark:border-green-800/20">
           <span className="material-symbols-outlined text-green-600">cloud_done</span>
           <div className="flex flex-col">
-            <p className="text-green-700 dark:text-green-400 text-xs font-bold">Google Drive Sync</p>
-            <p className="text-green-600 dark:text-green-500 text-[10px]">Atualizado agora</p>
+            <p className="text-green-700 dark:text-green-400 text-xs font-bold">Sistema Online</p>
+            <p className="text-green-600 dark:text-green-500 text-[10px]">Dados Sincronizados</p>
           </div>
         </div>
 

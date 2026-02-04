@@ -53,44 +53,64 @@ const StudentsView: React.FC<StudentsViewProps> = ({ students, onStudentClick })
                 </select>
             </div>
 
-            {/* Students Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {filteredStudents.map((student) => (
-                    <div
-                        key={student.id}
-                        onClick={() => onStudentClick(student.id)}
-                        className="bg-white dark:bg-slate-900 rounded-2xl border border-[#dbe0e6] dark:border-slate-800 p-6 shadow-sm hover:shadow-md hover:border-primary/30 transition-all cursor-pointer group"
-                    >
-                        <div className="flex flex-col items-center text-center">
-                            <div className="relative mb-4">
-                                <img src={student.avatar} alt={student.name} className="size-20 rounded-2xl shadow-sm group-hover:scale-105 transition-transform" />
-                                <div className={`absolute -bottom-1 -right-1 size-5 rounded-full border-2 border-white dark:border-slate-900 ${student.average >= 70 ? 'bg-green-500' : student.average >= 50 ? 'bg-blue-500' : 'bg-red-500'
-                                    }`}></div>
-                            </div>
+            {/* Students Table */}
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-[#dbe0e6] dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
+                <div className="overflow-y-auto h-[calc(100vh-280px)] custom-scrollbar">
+                    <table className="w-full text-left table-fixed">
+                        <thead className="bg-[#f8fafc] dark:bg-slate-800/50 text-[#617589] dark:text-slate-400 text-xs font-bold uppercase sticky top-0 z-10 backdrop-blur-md shadow-sm">
+                            <tr>
+                                <th className="px-6 py-4 w-auto">Aluno</th>
+                                <th className="px-6 py-4 w-40">Turma</th>
+                                <th className="px-6 py-4 w-32 text-center">Média</th>
+                                <th className="px-6 py-4 w-32 text-center">Envios</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                            {filteredStudents.map((student) => (
+                                <tr
+                                    key={student.id}
+                                    onClick={() => onStudentClick(student.id)}
+                                    className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer group"
+                                >
+                                    <td className="px-6 py-3">
+                                        <div className="flex items-center gap-4">
+                                            <div className="relative shrink-0">
+                                                <img src={student.avatar} alt={student.name} className="size-10 rounded-full border border-slate-100 dark:border-slate-700" />
+                                            </div>
+                                            <div className="truncate min-w-0">
+                                                <p className="text-sm font-bold text-[#111418] dark:text-white group-hover:text-primary transition-colors truncate">{student.name}</p>
+                                                <p className="text-[10px] text-[#617589] truncate">{student.id}</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-3">
+                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                                            {student.class || 'Sem Turma'}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-3 text-center">
+                                        <div className="flex flex-col items-center">
+                                            <span className={`text-sm font-bold ${student.average >= 70 ? 'text-green-600' : student.average >= 50 ? 'text-primary' : 'text-red-500'
+                                                }`}>
+                                                {student.average}%
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-3 text-center">
+                                        <span className="text-sm font-bold text-[#111418] dark:text-white">{student.exercisesDone}</span>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
 
-                            <h4 className="font-bold text-[#111418] dark:text-white mb-1 group-hover:text-primary transition-colors">{student.name}</h4>
-                            <p className="text-xs text-[#617589] font-medium mb-4">{student.class}</p>
-
-                            <div className="grid grid-cols-2 w-full gap-2 pt-4 border-t border-slate-50 dark:border-slate-800">
-                                <div className="flex flex-col">
-                                    <span className="text-[10px] text-[#617589] uppercase font-bold tracking-wider">Média</span>
-                                    <span className="text-sm font-bold text-primary">{student.average}%</span>
-                                </div>
-                                <div className="flex flex-col border-l border-slate-50 dark:border-slate-800 pl-2">
-                                    <span className="text-[10px] text-[#617589] uppercase font-bold tracking-wider">Envios</span>
-                                    <span className="text-sm font-bold text-[#111418] dark:text-white">{student.exercisesDone}</span>
-                                </div>
-                            </div>
+                    {filteredStudents.length === 0 && (
+                        <div className="p-12 text-center flex flex-col items-center gap-3">
+                            <span className="material-symbols-outlined text-4xl text-slate-300">person_off</span>
+                            <p className="text-[#617589]">Nenhum aluno encontrado.</p>
                         </div>
-                    </div>
-                ))}
-
-                {filteredStudents.length === 0 && (
-                    <div className="col-span-full py-20 text-center flex flex-col items-center gap-4 bg-slate-50 dark:bg-slate-900/50 rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800">
-                        <span className="material-symbols-outlined text-5xl text-slate-300">person_search</span>
-                        <p className="text-[#617589] font-medium">Nenhum aluno encontrado com esses filtros.</p>
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
         </div>
     );
