@@ -136,7 +136,7 @@ const StudentDetail: React.FC<StudentDetailProps> = ({ student, onBack }) => {
       <div className="bg-white dark:bg-slate-900 rounded-xl border border-[#dbe0e6] dark:border-slate-800 shadow-sm overflow-hidden">
         <div className="p-6 border-b border-[#f0f2f4] dark:border-slate-800">
           <h3 className="text-lg font-bold dark:text-white">Log de Atividades</h3>
-          <p className="text-sm text-[#617589]">Registros vinculados ao email: {student.id}</p>
+          <p className="text-sm text-[#617589]">Registros vinculados ao email: profmatatila@gmail.com</p>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left">
