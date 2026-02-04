@@ -89,19 +89,20 @@ const App: React.FC = () => {
     setCurrentView('student-detail');
   };
 
-  const [selectedList, setSelectedList] = useState<string>('Todas as Listas');
+  const [selectedClass, setSelectedClass] = useState<string>('Todas as Turmas');
 
-  const availableLists = useMemo(() => {
-    if (!data) return ['Todas as Listas'];
-    const lists = Array.from(new Set(data.questionStats.map(q => q.listName))).sort();
-    return ['Todas as Listas', ...lists];
+  const availableClasses = useMemo(() => {
+    if (!data) return ['Todas as Turmas'];
+    // Extract unique classes from classStats for consistency
+    const classes = data.classStats.map(c => c.name).sort();
+    return ['Todas as Turmas', ...classes];
   }, [data]);
 
   const renderContent = () => {
     if (loading) return (
       <div className="flex flex-col items-center justify-center h-full gap-4">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-        <p className="text-[#617589] font-medium">Sincronizando com Google Drive...</p>
+        <p className="text-[#617589] font-medium">Carregando dados...</p>
       </div>
     );
 
@@ -114,7 +115,7 @@ const App: React.FC = () => {
           activityName={activityName}
           evolutionData={data?.evolutionData || []}
           listStats={data?.listStats || []}
-          selectedList={selectedList}
+          selectedClass={selectedClass}
         />;
       case 'classes':
         return <ClassesView
@@ -131,10 +132,8 @@ const App: React.FC = () => {
       case 'list-stats':
         return <ListStatsView listStats={data?.listStats || []} />;
       case 'questions':
-        const questionsToShow = selectedList === 'Todas as Listas'
-          ? data?.questionStats || []
-          : data?.questionStats.filter(q => q.listName === selectedList) || [];
-        return <QuestionsAnalysisView questionStats={questionsToShow} />;
+        // Show all questions for now, or filter by quiz if we add that later
+        return <QuestionsAnalysisView questionStats={data?.questionStats || []} />;
       case 'students':
         return <StudentsView
           students={data?.students || []}
@@ -157,6 +156,7 @@ const App: React.FC = () => {
         />;
       case 'quiz-list':
         return <QuizList
+          selectedClass={selectedClass}
           onEdit={(id) => {
             setEditingQuizId(id);
             setCurrentView('quiz-builder');
@@ -217,9 +217,9 @@ const App: React.FC = () => {
           currentView={currentView}
           isDarkMode={isDarkMode}
           toggleDarkMode={() => setIsDarkMode(!isDarkMode)}
-          selectedList={selectedList}
-          onListChange={setSelectedList}
-          availableLists={availableLists}
+          selectedClass={selectedClass}
+          onClassChange={setSelectedClass}
+          availableClasses={availableClasses}
         />
 
         <main className="flex-1 overflow-y-auto custom-scrollbar">

@@ -2,13 +2,16 @@ import React, { useEffect, useState } from 'react';
 import { quizService } from '../../services/quizService';
 import { Quiz } from '../../types';
 
+
 interface QuizListProps {
+    statusFilter?: string; // Optional filter if we want to add later
+    selectedClass: string;
     onEdit: (quizId: string) => void;
     onCreateNew: () => void;
     onViewResults: (quizId: string) => void;
 }
 
-export function QuizList({ onEdit, onCreateNew, onViewResults }: QuizListProps) {
+export function QuizList({ selectedClass, onEdit, onCreateNew, onViewResults }: QuizListProps) {
     const [quizzes, setQuizzes] = useState<Quiz[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -22,8 +25,8 @@ export function QuizList({ onEdit, onCreateNew, onViewResults }: QuizListProps) 
             const data = await quizService.getAllQuizzes();
             setQuizzes(data);
         } catch (error) {
-            console.error(error);
-            alert('Erro ao carregar quizzes.');
+            console.error('Falha ao carregar quizzes:', error);
+            // Silent fail for now, just show empty state or logs
         } finally {
             setLoading(false);
         }
@@ -47,6 +50,10 @@ export function QuizList({ onEdit, onCreateNew, onViewResults }: QuizListProps) 
         alert(`Link copiado para "${title}"!`);
     };
 
+    const filteredQuizzes = selectedClass === 'Todas as Turmas'
+        ? quizzes
+        : quizzes.filter(q => q.target_class === selectedClass);
+
 
     if (loading) return <div className="p-8 text-center text-slate-500">Carregando seus quizzes...</div>;
 
@@ -59,17 +66,17 @@ export function QuizList({ onEdit, onCreateNew, onViewResults }: QuizListProps) 
                 </div>
                 <button
                     onClick={onCreateNew}
-                    className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 shadow-sm flex items-center gap-2 transition-colors"
+                    className="px-6 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 shadow-sm flex items-center gap-2 transition-colors"
                 >
                     <span className="material-symbols-outlined">add</span>
                     Criar Novo Quiz
                 </button>
             </div>
 
-            {quizzes.length === 0 ? (
+            {filteredQuizzes.length === 0 ? (
                 <div className="text-center py-20 bg-white rounded-2xl border-2 border-dashed border-slate-200">
                     <span className="material-symbols-outlined text-4xl text-slate-300 mb-2">history_edu</span>
-                    <p className="text-slate-500 font-medium">Você ainda não criou nenhum quiz.</p>
+                    <p className="text-slate-500 font-medium"> Nenhum quiz encontrado {selectedClass !== 'Todas as Turmas' ? `para a turma ${selectedClass}` : ''}.</p>
                 </div>
             ) : (
                 <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
@@ -84,7 +91,7 @@ export function QuizList({ onEdit, onCreateNew, onViewResults }: QuizListProps) 
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
-                                {quizzes.map(quiz => (
+                                {filteredQuizzes.map(quiz => (
                                     <tr key={quiz.id} className="hover:bg-slate-50 transition-colors group">
                                         <td className="p-4">
                                             <div className="flex items-center gap-3">

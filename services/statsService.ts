@@ -43,6 +43,15 @@ export const statsService = {
         const getQuiz = (id: string) => quizzes.find(q => q.id === id);
         const getQuestion = (id: string) => questions.find(q => q.id === id);
 
+        // Initialize classMap with all target_classes from quizzes
+        quizzes.forEach(q => {
+            if (q.target_class) {
+                if (!classMap[q.target_class]) {
+                    classMap[q.target_class] = { totalScore: 0, count: 0, studentEmails: new Set(), exercises: 0 };
+                }
+            }
+        });
+
         attempts.forEach(attempt => {
             const quiz = getQuiz(attempt.quiz_id);
             if (!quiz) return;

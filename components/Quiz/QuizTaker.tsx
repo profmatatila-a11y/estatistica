@@ -192,20 +192,95 @@ export function QuizTaker({ userEmail: defaultEmail, className, quizId }: { user
         </div>
     );
 
-    // 4. Results Screen
+    // 4. Results Screen (Detailed Feedback)
     if (finished) {
         return (
-            <div className="min-h-screen bg-slate-50 p-4 flex items-center justify-center">
-                <div className="p-8 max-w-2xl w-full text-center bg-white rounded-xl shadow-lg">
-                    <div className="mb-6">
-                        <span className="material-symbols-outlined text-6xl text-green-500">check_circle</span>
-                    </div>
-                    <h2 className="text-3xl font-bold text-slate-800 mb-2">Quiz Finalizado!</h2>
-                    <p className="text-slate-600 mb-8">Obrigado, {studentName.split(' ')[0]}!</p>
+            <div className="min-h-screen bg-slate-50 p-4 md:p-8">
+                <div className="max-w-3xl mx-auto space-y-8">
+                    {/* Header Card */}
+                    <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-200 text-center relative overflow-hidden">
+                        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 to-indigo-600"></div>
+                        <div className="mb-4">
+                            <span className="material-symbols-outlined text-6xl text-green-500 bg-green-50 rounded-full p-4">check_circle</span>
+                        </div>
+                        <h2 className="text-3xl font-bold text-slate-800 mb-2">Quiz Finalizado!</h2>
+                        <p className="text-slate-600 mb-6">Parabéns pelo esforço, {studentName.split(' ')[0]}!</p>
 
-                    <div className="bg-slate-50 p-6 rounded-xl inline-block mb-8 min-w-[200px]">
-                        <p className="text-sm text-slate-500 uppercase tracking-wide font-bold mb-1">Sua Pontuação</p>
-                        <div className="text-5xl font-black text-blue-600">{score}</div>
+                        <div className="inline-flex flex-col items-center bg-slate-50 px-8 py-4 rounded-xl border border-slate-100">
+                            <span className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-1">Nota Final</span>
+                            <span className="text-5xl font-black text-indigo-600">{score}</span>
+                        </div>
+                    </div>
+
+                    {/* Feedback List */}
+                    <div className="space-y-6">
+                        <h3 className="text-xl font-bold text-slate-800 ml-2 border-l-4 border-indigo-500 pl-4">Gabarito e Correção</h3>
+
+                        {questions.map((q, idx) => {
+                            const studentAnswer = answers[q.id];
+                            let isCorrect = false;
+                            let correctAnswerText = '';
+
+                            if (q.type === 'multiple_choice' && q.options) {
+                                const correctOpt = q.options.find(o => o.isCorrect);
+                                correctAnswerText = correctOpt ? correctOpt.text : 'Gabarito não definido';
+                                isCorrect = studentAnswer === correctAnswerText;
+                            } else {
+                                correctAnswerText = q.correct_answer || 'Resposta (Texto)';
+                                isCorrect = studentAnswer?.toLowerCase().trim() === correctAnswerText.toLowerCase().trim();
+                            }
+
+                            return (
+                                <div key={q.id} className={`bg-white p-6 rounded-xl shadow-sm border-l-4 ${isCorrect ? 'border-green-500' : 'border-red-500'}`}>
+                                    <div className="flex gap-4 mb-4">
+                                        <span className={`flex-shrink-0 size-8 flex items-center justify-center rounded-full text-sm font-bold text-white ${isCorrect ? 'bg-green-500' : 'bg-red-500'}`}>
+                                            {isCorrect ? '✓' : '✕'}
+                                        </span>
+                                        <div className="flex-1">
+                                            <div
+                                                className="font-medium text-lg text-slate-800 prose prose-slate max-w-none mb-2"
+                                                dangerouslySetInnerHTML={{ __html: q.text }}
+                                            />
+                                            {q.image_url && (
+                                                <img src={q.image_url} alt="Questão" className="mb-4 rounded-lg max-h-64 object-contain bg-slate-50 border border-slate-100" />
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 text-sm">
+                                        <div className={`p-4 rounded-lg border ${isCorrect ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+                                            <p className={`font-bold uppercase text-xs mb-1 ${isCorrect ? 'text-green-700' : 'text-red-700'}`}>Sua Resposta</p>
+                                            <p className={`font-medium ${isCorrect ? 'text-green-900' : 'text-red-900'}`}>
+                                                {studentAnswer || '(Sem resposta)'}
+                                            </p>
+                                        </div>
+
+                                        {!isCorrect && (
+                                            <div className="p-4 rounded-lg border bg-slate-50 border-slate-200">
+                                                <p className="font-bold uppercase text-xs text-slate-500 mb-1">Resposta Correta</p>
+                                                <p className="font-medium text-slate-800">{correctAnswerText}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    <div className="flex justify-center pt-8 pb-20">
+                        <button
+                            onClick={() => {
+                                setFinished(false);
+                                setAttemptId(null);
+                                setActiveQuiz(null);
+                                setScore(0);
+                                setAnswers({});
+                            }}
+                            className="bg-slate-800 text-white px-8 py-3 rounded-xl font-bold hover:bg-black shadow-lg transition-transform hover:-translate-y-1 flex items-center gap-2"
+                        >
+                            <span className="material-symbols-outlined">arrow_back</span>
+                            Voltar para Lista de Quizzes
+                        </button>
                     </div>
                 </div>
             </div>

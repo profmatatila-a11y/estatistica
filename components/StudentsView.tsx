@@ -19,7 +19,7 @@ const StudentsView: React.FC<StudentsViewProps> = ({ students, onStudentClick })
     });
 
     return (
-        <div className="p-8 flex flex-col gap-8 animate-in fade-in duration-500">
+        <div className="p-6 flex flex-col gap-6 animate-in fade-in duration-500">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h3 className="text-2xl font-bold text-[#111418] dark:text-white">Diretório de Alunos</h3>

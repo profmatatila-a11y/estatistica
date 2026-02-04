@@ -1,6 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { quizService } from '../../services/quizService';
 import { Question } from '../../types';
+// import ReactQuill from 'react-quill';
+// import 'react-quill/dist/quill.snow.css';
+
+const generateId = () => Math.random().toString(36).substr(2, 9);
 
 const MATH_SYMBOLS = [
     // Powers / Superscripts
@@ -51,11 +55,16 @@ export function QuizBuilder({ editingQuizId, onSuccess, onCancel }: QuizBuilderP
             setCustomHeader(quiz.custom_header || '');
             setClassName(quiz.target_class || '');
 
-            setQuestions(qData || []);
+            // Add local ID for rendering stability
+            const questionsWithLocalId = (qData || []).map(q => ({
+                ...q,
+                _tempId: generateId()
+            }));
+
+            setQuestions(questionsWithLocalId);
             setOriginalQuestionIds((qData || []).map(q => q.id));
         } catch (error) {
             console.error(error);
-            alert('Erro ao carregar quiz para edição');
         } finally {
             setLoading(false);
         }
@@ -72,7 +81,9 @@ export function QuizBuilder({ editingQuizId, onSuccess, onCancel }: QuizBuilderP
                 { label: 'B', text: '', isCorrect: false },
                 { label: 'C', text: '', isCorrect: false },
                 { label: 'D', text: '', isCorrect: false }
-            ]
+            ],
+            // @ts-ignore
+            _tempId: generateId()
         }]);
     };
 
@@ -95,7 +106,6 @@ export function QuizBuilder({ editingQuizId, onSuccess, onCancel }: QuizBuilderP
     const [activeField, setActiveField] = useState<{ qIdx: number, type: 'text' | 'option', oIdx?: number } | null>(null);
 
     const insertSymbol = (qIdx: number, symbol: string) => {
-        // If the user hasn't clicked anywhere, or is focused on another question, default to the Question Text of the current card
         const targetType = (activeField?.qIdx === qIdx) ? activeField.type : 'text';
         const targetOIdx = (activeField?.qIdx === qIdx) ? activeField.oIdx : 0;
 
@@ -157,14 +167,13 @@ export function QuizBuilder({ editingQuizId, onSuccess, onCancel }: QuizBuilderP
                 });
 
                 // Handle Questions
-                // 1. Delete removed questions
                 const currentIds = questions.map(q => q.id).filter(Boolean);
                 const toDelete = originalQuestionIds.filter(id => !currentIds.includes(id));
                 for (const id of toDelete) {
                     await quizService.deleteQuestion(id);
                 }
 
-                // 2. Update or Insert
+                // Update or Insert
                 for (const q of questions) {
                     const qPayload = {
                         quiz_id: quizId!,
@@ -228,6 +237,15 @@ export function QuizBuilder({ editingQuizId, onSuccess, onCancel }: QuizBuilderP
         navigator.clipboard.writeText(generatedLink);
         alert('Link copiado!');
     };
+
+    // Memoized Quill Modules to prevent re-initialization crashes
+    // const modules = React.useMemo(() => ({
+    //     toolbar: [
+    //         ['bold', 'italic', 'underline', 'strike'],
+    //         [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+    //         ['link', 'clean']
+    //     ],
+    // }), []);
 
     return (
         <div className="p-6 max-w-5xl mx-auto space-y-8">
@@ -307,7 +325,8 @@ export function QuizBuilder({ editingQuizId, onSuccess, onCancel }: QuizBuilderP
 
             <div className="space-y-6">
                 {questions.map((q, qIdx) => (
-                    <div key={qIdx} className="bg-white p-8 rounded-xl shadow-sm border border-slate-200 relative group">
+                    // @ts-ignore
+                    <div key={q._tempId || q.id || qIdx} className="bg-white p-8 rounded-xl shadow-sm border border-slate-200 relative group">
                         <div className="flex justify-between items-center mb-6">
                             <div>
                                 <h3 className="font-bold text-lg text-slate-400">Questão {qIdx + 1}</h3>
@@ -331,8 +350,8 @@ export function QuizBuilder({ editingQuizId, onSuccess, onCancel }: QuizBuilderP
                         </div>
 
                         <div className="mb-6 space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-slate-600 mb-1">Enunciado (Use os botões para símbolos)</label>
+                            <div onClick={() => setActiveField({ qIdx, type: 'text' })}>
+                                <label className="block text-sm font-medium text-slate-600 mb-1">Enunciado</label>
 
                                 <div className="flex flex-wrap gap-1 mb-2">
                                     {MATH_SYMBOLS.map(sym => (
@@ -347,13 +366,24 @@ export function QuizBuilder({ editingQuizId, onSuccess, onCancel }: QuizBuilderP
                                     ))}
                                 </div>
 
-                                <textarea
-                                    className="w-full border-slate-300 rounded-md shadow-sm p-3 border font-mono text-base"
-                                    value={q.text}
-                                    onChange={e => updateQuestion(qIdx, 'text', e.target.value)}
-                                    rows={4}
-                                    placeholder="Digite o enunciado da questão..."
-                                />
+                                <div className="bg-white rounded-md overflow-hidden">
+                                    {/* 
+                                    <ReactQuill
+                                        theme="snow"
+                                        value={q.text || ''}
+                                        onChange={(value) => updateQuestion(qIdx, 'text', value)}
+                                        modules={modules}
+                                        className="h-32 mb-10" // mb-10 to account for toolbar
+                                        placeholder="Digite o enunciado da questão..."
+                                    /> 
+                                    */}
+                                    <textarea
+                                        className="w-full h-32 p-4 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-y font-sans text-slate-700 leading-relaxed"
+                                        value={q.text || ''}
+                                        onChange={(e) => updateQuestion(qIdx, 'text', e.target.value)}
+                                        placeholder="Digite o enunciado da questão..."
+                                    />
+                                </div>
                             </div>
 
                             <div>
@@ -417,9 +447,9 @@ export function QuizBuilder({ editingQuizId, onSuccess, onCancel }: QuizBuilderP
                         {q.type !== 'text' ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {q.options?.map((opt, oIdx) => (
-                                    <div key={oIdx} className="flex items-center space-x-2">
+                                    <div key={oIdx} onClick={() => setActiveField({ qIdx, type: 'option', oIdx })} className="flex items-center space-x-2">
                                         <div
-                                            onClick={() => setCorrectOption(qIdx, oIdx)}
+                                            onClick={(e) => { e.stopPropagation(); setCorrectOption(qIdx, oIdx); }}
                                             className={`w-8 h-8 flex items-center justify-center rounded-full cursor-pointer font-bold border transition-colors ${opt.isCorrect ? 'bg-green-500 text-white border-green-600' : 'bg-slate-100 text-slate-500 border-slate-300 hover:bg-slate-200'}`}
                                         >
                                             {opt.label}

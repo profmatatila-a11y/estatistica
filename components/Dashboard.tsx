@@ -13,36 +13,36 @@ interface DashboardProps {
   activityName: string;
   evolutionData: any[];
   listStats: any[];
-  selectedList: string;
+  selectedClass: string;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ onStudentClick, students, classStats, activityName, evolutionData, listStats, selectedList }) => {
-  const isFiltered = selectedList !== 'Todas as Listas';
+const Dashboard: React.FC<DashboardProps> = ({ onStudentClick, students, classStats, activityName, evolutionData, listStats, selectedClass }) => {
+  const isFiltered = selectedClass !== 'Todas as Turmas';
 
+  // Filter students based on selected class
   const filteredStudentsData = React.useMemo(() => {
     if (!isFiltered) return students;
-    return students.map(s => {
-      const entry = s.history.find(h => h.listName === selectedList);
-      return entry ? { ...s, average: entry.score } : null;
-    }).filter((s): s is Student => s !== null);
-  }, [students, selectedList, isFiltered]);
+    return students.filter(s => s.class === selectedClass);
+  }, [students, selectedClass, isFiltered]);
 
   const overallAvg = filteredStudentsData.length > 0
     ? (filteredStudentsData.reduce((acc, s) => acc + s.average, 0) / filteredStudentsData.length).toFixed(1)
     : '0.0';
 
   const totalExercises = isFiltered
-    ? filteredStudentsData.length
+    ? filteredStudentsData.reduce((acc, s) => acc + s.exercisesDone, 0) // Sum exercises of filtered students
     : classStats.reduce((acc, c) => acc + c.exercisesCount, 0);
 
-  const activeActivityName = isFiltered ? selectedList : activityName;
+  // Get recent 4 students from the filtered list (or global list)
+  const recentStudents = [...filteredStudentsData]
+    .sort((a, b) => b.average - a.average) // Show top students or just recent? Original was just slice. Let's keep slice but maybe random or sorted?
+    // Actually, original mock had no timestamp in Student. Let's just show a few.
+    .slice(0, 4);
 
-  // Get recent 4 students as "Recent Activities"
-  const recentStudents = [...filteredStudentsData].slice(0, 4);
   const activities = recentStudents.map(s => ({
     icon: 'assignment_turned_in',
-    title: activeActivityName,
-    subtitle: `${s.name} • Nota: ${s.average.toFixed(1)}`,
+    title: 'Desempenho Geral', // Generic title since we are showing student avg
+    subtitle: `${s.name} • Média: ${s.average.toFixed(1)}`,
     color: 'bg-blue-50 text-blue-600'
   }));
 
