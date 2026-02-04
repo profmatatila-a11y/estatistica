@@ -33,10 +33,21 @@ export const quizService = {
     },
 
     async deleteQuiz(quizId: string) {
-        // Cascade delete should handle questions/attempts if configured, 
-        // but let's be safe or assume FK cascade is ON.
-        // If not, we might need to delete questions first. 
-        // Assuming typical Supabase setup with Cascade.
+        // Application-level Cascade Delete
+        // 1. Delete all answers linked to attempts of this quiz
+        // Note: Faster to let DB handle it, but this guarantees it works without "ON DELETE CASCADE"
+        const { data: attempts } = await supabase.from('quiz_attempts').select('id').eq('quiz_id', quizId);
+
+        if (attempts && attempts.length > 0) {
+            const attemptIds = attempts.map(a => a.id);
+            await supabase.from('quiz_answers').delete().in('attempt_id', attemptIds);
+            await supabase.from('quiz_attempts').delete().eq('quiz_id', quizId);
+        }
+
+        // 2. Delete all questions
+        await supabase.from('questions').delete().eq('quiz_id', quizId);
+
+        // 3. Delete the quiz itself
         const { error } = await supabase
             .from('quizzes')
             .delete()
