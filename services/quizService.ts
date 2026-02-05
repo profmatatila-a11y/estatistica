@@ -100,7 +100,7 @@ export const quizService = {
     },
 
     async getQuizzesByClass(className?: string) {
-        let query = supabase.from('quizzes').select('*').eq('is_active', true);
+        let query = supabase.from('quizzes').select('*').eq('is_active', true).eq('status', 'published');
         if (className) {
             query = query.eq('target_class', className);
         }

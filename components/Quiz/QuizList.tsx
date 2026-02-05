@@ -99,7 +99,19 @@ export function QuizList({ selectedClass, onEdit, onCreateNew, onViewResults }: 
                                                     <span className="material-symbols-outlined text-lg">quiz</span>
                                                 </div>
                                                 <div>
-                                                    <div className="font-semibold text-slate-800">{quiz.title}</div>
+                                                    <h3 className="font-bold text-lg text-slate-800 flex items-center gap-2">
+                                                        {quiz.title}
+                                                        {quiz.status === 'draft' && (
+                                                            <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-xs font-bold border border-amber-200">
+                                                                Rascunho
+                                                            </span>
+                                                        )}
+                                                        {quiz.status === 'published' && (
+                                                            <span className="px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-xs font-bold border border-green-200">
+                                                                Publicado
+                                                            </span>
+                                                        )}
+                                                    </h3>
                                                     <div className="text-xs text-slate-500 truncate max-w-xs">{quiz.description || 'Sem descrição'}</div>
                                                 </div>
                                             </div>

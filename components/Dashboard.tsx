@@ -51,7 +51,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onStudentClick, students, classSt
       {/* Welcome Header */}
       <div>
         <h3 className="text-2xl font-bold text-[#111418] dark:text-white">Relatórios em Tempo Real</h3>
-        <p className="text-[#617589] dark:text-slate-400">Análise pedagógica baseada na sua planilha do Google Drive.</p>
+        <p className="text-[#617589] dark:text-slate-400">Análise pedagógica do desempenho dos alunos.</p>
       </div>
 
       {/* Stats Grid */}

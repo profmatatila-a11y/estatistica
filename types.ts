@@ -71,6 +71,7 @@ export interface Quiz {
   custom_header?: string; // "Dizeres" customizáveis
   target_class?: string;
   is_active: boolean;
+  status: 'draft' | 'published' | 'archived';
   created_at: string;
 }
 

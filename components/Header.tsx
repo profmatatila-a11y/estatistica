@@ -50,18 +50,21 @@ const Header: React.FC<HeaderProps> = ({
 
       <div className="flex flex-1 justify-end gap-4 items-center">
         {/* Class Filter */}
-        <div className="hidden md:flex items-center gap-2 bg-[#f0f2f4] dark:bg-slate-800 rounded-lg px-3 h-10 border border-transparent focus-within:border-primary/30 transition-all">
-          <span className="material-symbols-outlined text-[#617589] text-xl">filter_list</span>
-          <select
-            value={selectedClass}
-            onChange={(e) => onClassChange(e.target.value)}
-            className="bg-transparent border-none focus:ring-0 text-sm font-bold text-[#111418] dark:text-white cursor-pointer min-w-[120px] max-w-[200px]"
-          >
-            {availableClasses.map(cls => (
-              <option key={cls} value={cls} className="dark:bg-slate-900">{cls}</option>
-            ))}
-          </select>
-        </div>
+        {/* Class Filter - Hide on Quiz Builder/Results */}
+        {!['quiz-builder', 'quiz-results'].includes(currentView) && (
+          <div className="hidden md:flex items-center gap-2 bg-[#f0f2f4] dark:bg-slate-800 rounded-lg px-3 h-10 border border-transparent focus-within:border-primary/30 transition-all">
+            <span className="material-symbols-outlined text-[#617589] text-xl">filter_list</span>
+            <select
+              value={selectedClass}
+              onChange={(e) => onClassChange(e.target.value)}
+              className="bg-transparent border-none focus:ring-0 text-sm font-bold text-[#111418] dark:text-white cursor-pointer min-w-[120px] max-w-[200px]"
+            >
+              {availableClasses.map(cls => (
+                <option key={cls} value={cls} className="dark:bg-slate-900">{cls}</option>
+              ))}
+            </select>
+          </div>
+        )}
 
         <div className="flex gap-2">
           <button
