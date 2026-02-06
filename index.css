@@ -1,7 +1,12 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
-.katex { 
-  font-size: 1.1em !important; 
+@source "./index.html";
+@source "./src/**/*.{js,ts,jsx,tsx}";
+@source "./components/**/*.{js,ts,jsx,tsx}";
+@source "./services/**/*.{js,ts,jsx,tsx}";
+@source "./utils/**/*.{js,ts,jsx,tsx}";
+
+.katex {
+  font-size: 1.1em !important;
 }
