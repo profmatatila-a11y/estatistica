@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { quizService } from '../../services/quizService';
 import { Question } from '../../types';
+import { MarkdownRenderer } from '../MarkdownRenderer';
 // import ReactQuill from 'react-quill';
 // import 'react-quill/dist/quill.snow.css';
 
@@ -35,6 +36,7 @@ export function QuizBuilder({ editingQuizId, onSuccess, onCancel }: QuizBuilderP
     const [loading, setLoading] = useState(false);
     const [generatedLink, setGeneratedLink] = useState('');
     const [uploading, setUploading] = useState(false);
+    const [previewModes, setPreviewModes] = useState<Record<string, boolean>>({});
 
     // Tracks original question IDs to handle deletions during edit
     const [originalQuestionIds, setOriginalQuestionIds] = useState<string[]>([]);
@@ -393,36 +395,45 @@ export function QuizBuilder({ editingQuizId, onSuccess, onCancel }: QuizBuilderP
                                 <div onClick={() => setActiveField({ qIdx, type: 'text' })}>
                                     <label className="block text-sm font-medium text-slate-600 mb-1">Enunciado</label>
 
-                                    <div className="flex flex-wrap gap-1 mb-2">
-                                        {MATH_SYMBOLS.map(sym => (
-                                            <button
-                                                key={sym.label}
-                                                onClick={() => insertSymbol(qIdx, sym.value)}
-                                                className="px-2 py-1 bg-slate-100 border border-slate-200 rounded text-xs font-bold text-slate-700 hover:bg-slate-200 transition-colors"
-                                                title={`Inserir ${sym.label}`}
-                                            >
-                                                {sym.label}
-                                            </button>
-                                        ))}
+                                    <div className="flex flex-wrap gap-1 mb-2 items-center justify-between">
+                                        <div className="flex gap-1">
+                                            {MATH_SYMBOLS.map(sym => (
+                                                <button
+                                                    key={sym.label}
+                                                    onClick={() => insertSymbol(qIdx, sym.value)}
+                                                    className="px-2 py-1 bg-slate-100 border border-slate-200 rounded text-xs font-bold text-slate-700 hover:bg-slate-200 transition-colors"
+                                                    title={`Inserir ${sym.label}`}
+                                                >
+                                                    {sym.label}
+                                                </button>
+                                            ))}
+                                        </div>
+                                        <button
+                                            onClick={() => setPreviewModes(prev => ({ ...prev, [`${qIdx}_text`]: !prev[`${qIdx}_text`] }))}
+                                            className={`px-3 py-1 rounded-full text-xs font-bold border flex items-center gap-1 ${previewModes[`${qIdx}_text`]
+                                                ? 'bg-indigo-100 text-indigo-700 border-indigo-200'
+                                                : 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100'}`}
+                                        >
+                                            <span className="material-symbols-outlined text-sm">
+                                                {previewModes[`${qIdx}_text`] ? 'visibility_off' : 'visibility'}
+                                            </span>
+                                            {previewModes[`${qIdx}_text`] ? 'Editar' : 'Visualizar'}
+                                        </button>
                                     </div>
 
-                                    <div className="bg-white rounded-md overflow-hidden">
-                                        {/* 
-                                        <ReactQuill
-                                            theme="snow"
-                                            value={q.text || ''}
-                                            onChange={(value) => updateQuestion(qIdx, 'text', value)}
-                                            modules={modules}
-                                            className="h-32 mb-10" // mb-10 to account for toolbar
-                                            placeholder="Digite o enunciado da questão..."
-                                        /> 
-                                        */}
-                                        <textarea
-                                            className="w-full h-32 p-4 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-y font-sans text-slate-700 leading-relaxed"
-                                            value={q.text || ''}
-                                            onChange={(e) => updateQuestion(qIdx, 'text', e.target.value)}
-                                            placeholder="Digite o enunciado da questão..."
-                                        />
+                                    <div className="bg-white rounded-md overflow-hidden relative">
+                                        {previewModes[`${qIdx}_text`] ? (
+                                            <div className="w-full h-32 p-4 border border-slate-200 rounded-lg overflow-y-auto bg-slate-50">
+                                                <MarkdownRenderer content={q.text || '*Sem conteúdo*'} />
+                                            </div>
+                                        ) : (
+                                            <textarea
+                                                className="w-full h-32 p-4 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-y font-sans text-slate-700 leading-relaxed"
+                                                value={q.text || ''}
+                                                onChange={(e) => updateQuestion(qIdx, 'text', e.target.value)}
+                                                placeholder="Digite o enunciado da questão... (Markdown e LaTeX suportados)"
+                                            />
+                                        )}
                                     </div>
                                 </div>
 
@@ -486,6 +497,17 @@ export function QuizBuilder({ editingQuizId, onSuccess, onCancel }: QuizBuilderP
 
                             {q.type !== 'text' ? (
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="col-span-1 md:col-span-2 flex justify-end">
+                                        <button
+                                            onClick={() => setPreviewModes(prev => ({ ...prev, [`${qIdx}_options`]: !prev[`${qIdx}_options`] }))}
+                                            className="text-xs font-bold text-slate-500 hover:text-indigo-600 flex items-center gap-1"
+                                        >
+                                            <span className="material-symbols-outlined text-sm">
+                                                {previewModes[`${qIdx}_options`] ? 'visibility_off' : 'visibility'}
+                                            </span>
+                                            {previewModes[`${qIdx}_options`] ? 'Editar Alternativas' : 'Visualizar Alternativas'}
+                                        </button>
+                                    </div>
                                     {q.options?.map((opt, oIdx) => (
                                         <div key={oIdx} onClick={() => setActiveField({ qIdx, type: 'option', oIdx })} className="flex items-center space-x-2">
                                             <div
@@ -494,11 +516,17 @@ export function QuizBuilder({ editingQuizId, onSuccess, onCancel }: QuizBuilderP
                                             >
                                                 {opt.label}
                                             </div>
-                                            <input
-                                                className="flex-1 border-slate-300 rounded-md shadow-sm p-2 border text-sm"
-                                                value={opt.text} onChange={e => updateOption(qIdx, oIdx, e.target.value)}
-                                                placeholder={`Opção ${opt.label}`}
-                                            />
+                                            {previewModes[`${qIdx}_options`] ? (
+                                                <div className="flex-1 p-2 border border-transparent">
+                                                    <MarkdownRenderer content={opt.text || '(Vazio)'} className="text-sm" />
+                                                </div>
+                                            ) : (
+                                                <input
+                                                    className="flex-1 border-slate-300 rounded-md shadow-sm p-2 border text-sm"
+                                                    value={opt.text} onChange={e => updateOption(qIdx, oIdx, e.target.value)}
+                                                    placeholder={`Opção ${opt.label} (Markdown/LaTeX ok)`}
+                                                />
+                                            )}
                                         </div>
                                     ))}
                                 </div>

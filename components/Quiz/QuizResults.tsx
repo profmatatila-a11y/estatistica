@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { quizService } from '../../services/quizService';
 import { QuizAttempt, Quiz, Question } from '../../types';
+import { MarkdownRenderer } from '../MarkdownRenderer';
 
 interface QuizResultsProps {
     quizId: string;
@@ -183,7 +184,9 @@ export function QuizResults({ quizId, onBack }: QuizResultsProps) {
                                                 <span className="bg-slate-200 text-slate-600 font-bold text-xs h-6 px-2 flex items-center justify-center rounded">
                                                     #{index + 1}
                                                 </span>
-                                                <p className="font-medium text-slate-800" dangerouslySetInnerHTML={{ __html: q.text }} />
+                                                <div className="font-medium text-slate-800">
+                                                    <MarkdownRenderer content={q.text} />
+                                                </div>
                                             </div>
 
                                             <div className="pl-9 flex flex-col gap-2">
@@ -192,13 +195,13 @@ export function QuizResults({ quizId, onBack }: QuizResultsProps) {
                                                     : 'bg-red-50 border-red-200 text-red-800'
                                                     }`}>
                                                     <span className="font-bold block text-xs uppercase opacity-70 mb-1">Resposta do Aluno:</span>
-                                                    {studentAnswerText}
+                                                    <MarkdownRenderer content={studentAnswerText} />
                                                 </div>
 
                                                 {!isCorrect && (
                                                     <div className="p-3 rounded-lg border bg-blue-50 border-blue-200 text-blue-800 text-sm">
                                                         <span className="font-bold block text-xs uppercase opacity-70 mb-1">Resposta Correta:</span>
-                                                        {correctAnswerText}
+                                                        <MarkdownRenderer content={correctAnswerText} />
                                                     </div>
                                                 )}
                                             </div>

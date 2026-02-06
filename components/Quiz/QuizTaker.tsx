@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { quizService } from '../../services/quizService';
 import { Quiz, Question } from '../../types';
+import { MarkdownRenderer } from '../MarkdownRenderer';
 
 export function QuizTaker({ userEmail: defaultEmail, className, quizId }: { userEmail?: string; className?: string, quizId?: string }) {
     const [quizzes, setQuizzes] = useState<Quiz[]>([]);
@@ -237,10 +238,9 @@ export function QuizTaker({ userEmail: defaultEmail, className, quizId }: { user
                                             {isCorrect ? '✓' : '✕'}
                                         </span>
                                         <div className="flex-1">
-                                            <div
-                                                className="font-medium text-lg text-slate-800 prose prose-slate max-w-none mb-2"
-                                                dangerouslySetInnerHTML={{ __html: q.text }}
-                                            />
+                                            <div className="font-medium text-lg text-slate-800 mb-2">
+                                                <MarkdownRenderer content={q.text} />
+                                            </div>
                                             {q.image_url && (
                                                 <img src={q.image_url} alt="Questão" className="mb-4 rounded-lg max-h-64 object-contain bg-slate-50 border border-slate-100" />
                                             )}
@@ -250,15 +250,13 @@ export function QuizTaker({ userEmail: defaultEmail, className, quizId }: { user
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 text-sm">
                                         <div className={`p-4 rounded-lg border ${isCorrect ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
                                             <p className={`font-bold uppercase text-xs mb-1 ${isCorrect ? 'text-green-700' : 'text-red-700'}`}>Sua Resposta</p>
-                                            <p className={`font-medium ${isCorrect ? 'text-green-900' : 'text-red-900'}`}>
-                                                {studentAnswer || '(Sem resposta)'}
-                                            </p>
+                                            <MarkdownRenderer content={studentAnswer || '(Sem resposta)'} className={`font-medium ${isCorrect ? 'text-green-900' : 'text-red-900'}`} />
                                         </div>
 
                                         {!isCorrect && (
                                             <div className="p-4 rounded-lg border bg-slate-50 border-slate-200">
                                                 <p className="font-bold uppercase text-xs text-slate-500 mb-1">Resposta Correta</p>
-                                                <p className="font-medium text-slate-800">{correctAnswerText}</p>
+                                                <MarkdownRenderer content={correctAnswerText} className="font-medium text-slate-800" />
                                             </div>
                                         )}
                                     </div>
@@ -296,10 +294,9 @@ export function QuizTaker({ userEmail: defaultEmail, className, quizId }: { user
                     <h1 className="text-2xl font-bold text-slate-900">Matemática Online</h1>
                     <h2 className="text-lg text-slate-700 font-medium">Prof. Átila de Oliveira</h2>
                     {activeQuiz.custom_header && (
-                        <div
-                            className="mt-4 text-slate-600 max-w-2xl mx-auto italic prose prose-slate"
-                            dangerouslySetInnerHTML={{ __html: activeQuiz.custom_header }}
-                        />
+                        <div className="mt-4 text-slate-600 max-w-2xl mx-auto italic">
+                            <MarkdownRenderer content={activeQuiz.custom_header} />
+                        </div>
                     )}
                 </div>
 
@@ -320,10 +317,9 @@ export function QuizTaker({ userEmail: defaultEmail, className, quizId }: { user
                                     <span className="flex-shrink-0 bg-slate-100 text-slate-600 size-8 flex items-center justify-center rounded-lg text-sm font-bold">{idx + 1}</span>
                                     <div className="flex-1">
                                         {/* Rich Text Question */}
-                                        <div
-                                            className="font-medium text-lg text-slate-800 prose prose-slate max-w-none"
-                                            dangerouslySetInnerHTML={{ __html: q.text }}
-                                        />
+                                        <div className="font-medium text-lg text-slate-800">
+                                            <MarkdownRenderer content={q.text} />
+                                        </div>
                                         {/* Question Image */}
                                         {q.image_url && (
                                             <img src={q.image_url} alt="Questão" className="mt-4 rounded-lg max-h-96 object-contain border border-slate-100 bg-slate-50" />
@@ -358,7 +354,7 @@ export function QuizTaker({ userEmail: defaultEmail, className, quizId }: { user
                                                 <div className="flex-1">
                                                     <span className="font-bold text-slate-500 mr-2">{opt.label})</span>
                                                     <span className={answers[q.id] === opt.text ? 'text-slate-900 font-medium' : 'text-slate-600'}>
-                                                        {opt.text}
+                                                        <MarkdownRenderer content={opt.text} className="inline-block" />
                                                     </span>
                                                 </div>
                                             </label>

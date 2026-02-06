@@ -10,13 +10,18 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.94.0",
+    "katex": "^0.16.28",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-is": "^19.2.4",
+    "react-markdown": "^10.1.0",
     "react-quill": "^2.0.0",
-    "recharts": "^3.7.0"
+    "recharts": "^3.7.0",
+    "rehype-katex": "^7.0.1",
+    "remark-math": "^6.0.0"
   },
   "devDependencies": {
+    "@types/katex": "^0.16.8",
     "@types/node": "^22.14.0",
     "@vitejs/plugin-react": "^5.0.0",
     "typescript": "~5.8.2",
